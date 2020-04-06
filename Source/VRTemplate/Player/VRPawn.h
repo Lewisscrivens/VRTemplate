@@ -6,7 +6,7 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "IIdentifiableXRDevice.h"
-#include "Project/Globals.h"
+#include "Globals.h"
 #include "VRPawn.generated.h"
 
 /* Declare log type for the player pawn class. */
@@ -87,15 +87,15 @@ public:
 	AVRHand* rightHand;
 
 	/* Blueprint template class to spawn the movement component from. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pawn")
+	UPROPERTY(EditDefaultsOnly, Category = "Pawn")
 	TSubclassOf<AVRMovement> movementClass;
 
 	/* The template class/BP for the left hand. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pawn")
+	UPROPERTY(EditDefaultsOnly, Category = "Pawn")
 	TSubclassOf<AVRHand> leftHandClass;
 
 	/* The template class/BP for the right hand. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pawn")
+	UPROPERTY(EditDefaultsOnly, Category = "Pawn")
 	TSubclassOf<AVRHand> rightHandClass;
 
 	/* Container component to add feedback and audio references that are obtainable by name in code. */
@@ -197,15 +197,6 @@ public:
 	/////////////////////////////////////////////////////
 	/*					Input events.                  */
 	/////////////////////////////////////////////////////
-
-
-	template<bool val> void InteractLeft() { InteractLeft(val); }
-	UFUNCTION(Category = "Pawn|Input")
-	void InteractLeft(bool pressed);
-
-	template<bool val> void InteractRight() { InteractRight(val); }
-	UFUNCTION(Category = "Pawn|Input")
-	void InteractRight(bool pressed);
 
 	template<bool val> void GrabLeft() { GrabLeft(val); }
 	UFUNCTION(Category = "Pawn|Input")

@@ -9,18 +9,16 @@ DEFINE_LOG_CATEGORY(LogSimpleTimeline);
 
 USimpleTimeline::USimpleTimeline()
 {
-
-
+	//...
 }
 
 USimpleTimeline* USimpleTimeline::CreateSimpleTimeline(UCurveFloat * timelineCurve, FName timelineName, UObject * propertySetObject, FName callbackFunction, FName finishFunction, AActor * owningActor, FName timelineVariableName, bool looping, ETimelineLengthMode timelineLength, TEnumAsByte<ETimelineDirection::Type> timelineDirection)
 {
+	// Only create timeline if curve has been given.
 	if (timelineCurve)
 	{
-		// Timeline name
-		FString name = timelineName.ToString().Append("_SimpleTimeline");
-
 		// Create simple timeline to return
+		FString name = timelineName.ToString().Append("_SimpleTimeline");
 		USimpleTimeline* timeline = NewObject<USimpleTimeline>(propertySetObject, timelineName);
 
 		// Create a timeline component and set it inside the SimpleTimeline
@@ -41,7 +39,6 @@ USimpleTimeline* USimpleTimeline::CreateSimpleTimeline(UCurveFloat * timelineCur
 		timelineComponent->SetLooping(looping);
 		timelineComponent->SetTimelineLengthMode(timelineLength);
 		timelineComponent->SetPlaybackPosition(0.0f, false, false);
-
 		onTimelineCallback.BindUFunction(propertySetObject, callbackFunction);
 
 		// if finish function name = NAME_None don't create a finish function callback
@@ -56,8 +53,11 @@ USimpleTimeline* USimpleTimeline::CreateSimpleTimeline(UCurveFloat * timelineCur
 		timelineComponent->AddInterpFloat(timelineCurve, onTimelineCallback, timelineVariableName);
 		timelineComponent->RegisterComponent();
 
+		// Return the created timeline.
 		return timeline;
 	}
+
+	// Loge error and return null.
 	UE_LOG(LogSimpleTimeline, Error, TEXT("Could not create SimpleTimeline!"));
 	return nullptr;
 }
@@ -68,13 +68,13 @@ USimpleTimeline * USimpleTimeline::CreateLinearSimpleTimeline(FName timelineName
 	FRichCurve* curve = new FRichCurve();
 	curve->SetKeyInterpMode(curve->AddKey(0.0f, 0.0f), ERichCurveInterpMode::RCIM_Linear);
 	curve->SetKeyInterpMode(curve->AddKey(1.0f, 1.0f), ERichCurveInterpMode::RCIM_Linear);
-	
 	UCurveFloat* timelineCurve = NewObject<UCurveFloat>();
 	timelineCurve->FloatCurve = *curve;
 
 	// Cleanup
 	delete curve;
 
+	// Create and return the simple timeline.
 	return CreateSimpleTimeline(timelineCurve, timelineName, propertySetObject, callbackFunction, finishFunction, owningActor, timelineVariableName, looping, timelineLength, timelineDirection);
 }
 

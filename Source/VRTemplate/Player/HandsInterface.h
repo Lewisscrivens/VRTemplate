@@ -3,7 +3,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "Project/Globals.h"
+#include "Globals.h"
 #include "Player/VRPhysicsHandleComponent.h" // For the FPhysicsHandleData include.
 #include "HandsInterface.generated.h"
 

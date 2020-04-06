@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "Project/Globals.h"
+#include "Globals.h"
 #include "HandsAnimInstance.generated.h"
 
 /* Define this actors log category. */
@@ -24,7 +24,7 @@ public:
 
 	/** Current hand lerping close amount. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Hands)
-		float handLerpingAmount;
+	float handLerpingAmount;
 
 	/** Current hands pinky close amount coming from the hands class. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Hands)

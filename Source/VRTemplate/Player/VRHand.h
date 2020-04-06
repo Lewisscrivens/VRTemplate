@@ -5,7 +5,7 @@
 #include "MotionControllerComponent.h"
 #include "GameFramework/Actor.h"
 #include "Player/HandsInterface.h"
-#include "Project/Globals.h"
+#include "Globals.h"
 #include "VRHand.generated.h"
 
 /* Declare log type for the hand class. */
@@ -23,13 +23,9 @@ class UVRPhysicsHandleComponent;
 class USkeletalMeshComponent;
 class UHapticFeedbackEffect_Base;
 class UEffectsContainer;
-
-// /* Define haptic effect locations for the controllers. */
-// #define DefaultFeedback FString("/Game/HapticFeedback/HFC_GrabHaptic.HFC_GrabHaptic")
-// #define CollisionFeedback FString("/Game/HapticFeedback/HFC_CollisionHaptic.HFC_CollisionHaptic")
-// 
-// /* Define sound effect locations for the controllers. */
-// #define CollisionSound FString("/Game/Audio/Wavs/ImpactNoises/SW_impactSound")
+class UWidgetInteractionComponent;
+class USphereComponent;
+class UWidgetComponent;
 
 /* NOTE: Just flipping a mesh on an axis to create a left and right hand from the said mesh will break its physics asset in version UE4.23
  * NOTE: HandSkel collision used for interacting with grabbable etc. Constrained components must use physicsCollider to prevent constraint breakage. */
@@ -42,11 +38,11 @@ public:
 
 	/* Scene component to hold the controller. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
-		USceneComponent* scene;
+	USceneComponent* scene;
 
 	/* Motion controller. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-		UMotionControllerComponent* controller;
+	UMotionControllerComponent* controller;
 
 	/* Scene component to hold the hand skel and colliders. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
@@ -54,105 +50,117 @@ public:
 
 	/* Pointer to the hand skeletal mesh component from the player controller pawn. Set in BP. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-		USkeletalMeshComponent* handSkel;
+	USkeletalMeshComponent* handSkel;
+
+	/* Movement controller direction. (Point forward on X-axis in direction of hand and position to spawn teleporting spline etc.) */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
+	USceneComponent* movementTarget;
+
+	/* Sphere component to detect overlaps with widgets in the 3D world to fire the widgetInteractor events correctly. */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
+	USphereComponent* widgetOverlap;
+
+	/* Widget interaction component to allow interaction with 3D ui via touching it with the index finger on either hand. */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
+	UWidgetInteractionComponent* widgetInteractor;
 
 	/* Collier to handle any physics collisions with constrained components to prevent breakage due to infinite hand force. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-		UBoxComponent* physicsCollider;
+	UBoxComponent* physicsCollider;
 
 	/* Pointer to the grab colliders from the player controller pawn. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-		UBoxComponent* grabCollider;
+	UBoxComponent* grabCollider;
 
 	/* VR Physics handle component to handle grabbed actors collision against other colliders. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-		UVRPhysicsHandleComponent* grabHandle;
+	UVRPhysicsHandleComponent* grabHandle;
 
 	/* VR Physics handle component to handle the hands physics collider to collide with constraint components. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-		UVRPhysicsHandleComponent* physicsHandle;
+	UVRPhysicsHandleComponent* physicsHandle;
 
 	/* Audio component to use for impact sounds or any other sounds from the hands current location.
 	 * NOTE: Used over play sound at location as I need to know when the sound has stopped playing. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-		UAudioComponent* handAudio;
+	UAudioComponent* handAudio;
 
 	/* Pointer to the main player class. Initialized in the player class. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Hand")
-		AVRPawn* player;
+	AVRPawn* player;
 
 	/* Pointer to the other hand for grabbing objects from hands. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Hand")
-		AVRHand* otherHand;
+	AVRHand* otherHand;
 
 	/* Enum for what this current hand is. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hand")
-		EControllerHand handEnum;
+	EControllerHand handEnum;
 
 	/* The name of this controller. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hand")
-		FName controllerName;
+	FName controllerName;
 
 	/* Pointer to store any overlapping objects that can be grabbed and contain the hands interface. */
 	UPROPERTY(BlueprintReadOnly, Category = "Hand")
-		UObject* objectToGrab;
+	UObject* objectToGrab;
 
 	/* Pointer to the object in the hand. */
 	UPROPERTY(BlueprintReadOnly, Category = "Hand")
-	    UObject* objectInHand;
+	UObject* objectInHand;
 
 	/* Extent of the physics Collider when the hand is closed. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Hand")
-		FVector pcClosedExtent;
+	FVector pcClosedExtent;
 
 	/* Position of the physics Collider when the hand is closed. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Hand")
-		FVector pcClosedPositiion;
+	FVector pcClosedPositiion;
 
 	/* Do the hands disappear when grabbing things? */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hand")
-		bool hideOnGrab;
+	bool hideOnGrab;
 
 	/* Is the player grabbing? */
 	UPROPERTY(BlueprintReadOnly, Category = "Hand|CurrentValues")
-		bool grabbing;
+	bool grabbing;
 
 	/* Is the player gripping? */
 	UPROPERTY(BlueprintReadOnly, Category = "Hand|CurrentValues")
-		bool gripping;
+	bool gripping;
 
 	/* Current velocity of the hand calculated in the tick function. */
 	UPROPERTY(BlueprintReadOnly, Category = "Hand|CurrentValues")
-		FVector handVelocity;
+	FVector handVelocity;
 
 	/* Current angular velocity of the hand calculated in the tick function. */
 	UPROPERTY(BlueprintReadOnly, Category = "Hand|CurrentValues")
-		FVector handAngularVelocity;
+	FVector handAngularVelocity;
 
 	/* Current trigger value used for animating the hands etc. */
 	UPROPERTY(BlueprintReadOnly, Category = "Hand|CurrentValues")
-		float trigger;
+	float trigger;
 
 	/* Current thumb stick values for this hand. */
 	UPROPERTY(BlueprintReadOnly, Category = "Hand|CurrentValues")
-		FVector2D thumbstick;
+	FVector2D thumbstick;
 	
 	/* Is the hand active. */
 	UPROPERTY(BlueprintReadOnly, Category = "Hand|CurrentValues")
-		bool active;
+	bool active;
 
 	/* Is the controller currently being tracked. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hand")
-		bool foundController; 
+	bool foundController; 
 
 	/* Enable any debug messages for this class.
 	 * NOTE: Only used when DEVELOPMENT = 1. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Hand")
-		bool debug;
+	bool debug;
 
 	/* Is the hand currently locked to an interactable. NOTE: Needs to grip to release from hand... */
 	UPROPERTY(BlueprintReadOnly, Category = "Hand")
-		bool handIsLocked; 
+	bool handIsLocked; 
 
 protected:
 
@@ -208,6 +216,10 @@ public:
 
 	/* Frame */
 	virtual void Tick(float DeltaTime) override;
+
+	/* Widget interactor begin overlap event. */
+	UFUNCTION(Category = "Collision")
+	void WidgetInteractorOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	/* Initialise variables given from the AVRPawn, Also acts as this classes begin play.
 	 * @Param oppositeHand, Pointer to the other hand.

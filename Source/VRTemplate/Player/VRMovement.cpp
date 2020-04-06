@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Player/VRMovement.h"
+#include "VRMovement.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/SplineComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -46,7 +46,7 @@ AVRMovement::AVRMovement()
 	// Setup teleporting meshes and spline.
 	teleportRing = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TeleportRing"));
 	teleportRing->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	teleportRing->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel4);// TeleportRing channel
+	teleportRing->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel4);
 	teleportRing->SetVisibility(false);
 	teleportRing->SetupAttachment(scene);
 
@@ -88,7 +88,7 @@ AVRMovement::AVRMovement()
 	vignetteTransitionSpeed = 5.0f;
 	devHandOffset = FVector(70.0f, 25.0f, 8.0f);
 	handMovementSpeed = 100.0f;
-	walkingSpeed = 100.0f;
+	walkingSpeed = 150.0f;
 	minMovementOffsetRadius = 5.0f;
 	maxMovementOffsetRadius = 40.0f;
 	swingingArmsSpeed = 8.0f;
@@ -103,114 +103,120 @@ AVRMovement::AVRMovement()
 
 void AVRMovement::Tick(float DeltaTime)
 {
-	// Check if the capsule is currently in the air and if it is enable physics, otherwise disable physics.
+	//  Check if the capsule is currently in the air and if it is enable physics, otherwise disable physics.
 	if (player)
 	{
 		switch (currentMovementMode)
 		{
 #if WITH_EDITOR
-			case EVRMovementMode::Developer:
-				// Update the keyboard and mouse movement.
-				UpdateDeveloperMovement(GetWorld()->GetDeltaSeconds());
+		case EVRMovementMode::Developer:
+			// Update the keyboard and mouse movement.
+			UpdateDeveloperMovement(GetWorld()->GetDeltaSeconds());
 #endif
 			break;
-			case EVRMovementMode::SpeedRamp: 
-			case EVRMovementMode::Joystick:  
-			case EVRMovementMode::SwingingArms:
+		case EVRMovementMode::SpeedRamp:
+		case EVRMovementMode::Joystick:
+		case EVRMovementMode::SwingingArms:
+		{
+			FHitResult floorCheck;
+			FCollisionQueryParams floorTraceParams;
+			floorTraceParams.AddIgnoredActor(this);
+			floorTraceParams.AddIgnoredActor(player);
+			FVector feetLocation = player->scene->GetComponentLocation();
+			GetWorld()->LineTraceSingleByProfile(floorCheck, feetLocation, feetLocation - FVector(0.0f, 0.0f, 1.0f), "PlayerCapsule", floorTraceParams);
+			// If the floor was not found enable physics.
+			if (floorCheck.bBlockingHit)
 			{
-				FHitResult floorCheck;
-				FCollisionQueryParams floorTraceParams;
-				floorTraceParams.AddIgnoredActor(this);
-				floorTraceParams.AddIgnoredActor(player);
-				FVector feetLocation = player->scene->GetComponentLocation();
-				GetWorld()->LineTraceSingleByProfile(floorCheck, feetLocation, feetLocation - FVector(0.0f, 0.0f, 1.0f), "PlayerCapsule", floorTraceParams);
-				// If the floor was not found enable physics.
-				if (floorCheck.bBlockingHit)
-				{
-					if (player->movementCapsule->IsSimulatingPhysics()) EnableCapsule(false);
-				}
-				else if (!player->movementCapsule->IsSimulatingPhysics()) EnableCapsule(true);
+				if (player->movementCapsule->IsSimulatingPhysics()) EnableCapsule(false);
 			}
-			break;
+			else if (!player->movementCapsule->IsSimulatingPhysics()) EnableCapsule(true);
+		}
+		break;
 		}
 	}
 }
 
 void AVRMovement::SetupMovement(AVRPawn* playerPawn, bool dev)
 {
+	// Get and store a reference to the players controller.
 	if (playerPawn)
 	{
 		player = playerPawn;
-		// Get and store a reference to the players controller.
 		playerController = Cast<APlayerController>(player->Controller);
 	}
 
 	// Ensure this player is set to the navAgent player setup in the project settings...
 	UNavigationSystemV1* navSystem = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem());
 	TArray<FNavDataConfig> navProps = navSystem->GetSupportedAgents();
-	if (navProps[agentID].IsValid()) player->floatingMovement->NavAgentProps = navProps[agentID];
-	else UE_LOG(LogVRMovement, Warning, TEXT("The agent is out of bounds, navmesh may not support all agents..."));
+
+	// agentID is the id of the nav agent setup in project settings. The index of what the players nav agent settings are...
+	if (navProps.Num() > agentID && navProps[agentID].IsValid()) player->floatingMovement->NavAgentProps = navProps[agentID];
+	else UE_LOG(LogVRMovement, Warning, TEXT("The agentID is out of bounds, navmesh may not support all agents..."));
+
+	// Reset this in case the setup movement is being ran for a second time during runtime.
+	canApplyVignette = true;
+	player->vignette->SetActive(false);
+	player->vignette->SetVisibility(false);
 
 	// Movement needs to be setup twice in the case of developer mode.
 	EVRMovementMode toSetUp = currentMovementMode;
-	// Use teleport movement with developer mode.
 	if (dev) toSetUp = EVRMovementMode::Teleport;
-	
+
 	// Update the current movement variables.
 	switch (toSetUp)
 	{
 #if WITH_EDITOR
-		case EVRMovementMode::Developer:
-		{
-			// Setup player movement controls.
-			SetupDeveloperMovement();
+	case EVRMovementMode::Developer:
+	{
+		// Setup player movement controls.
+		SetupDeveloperMovement();
 
-			// Setup the teleport for developer movement.
-			SetupMovement(nullptr, true);
+		// Setup the teleport for developer movement.
+		SetupMovement(nullptr, true);
 
-			// Ensure capsule is disabled.
-			player->movementCapsule->SetCollisionResponseToAllChannels(ECR_Ignore);
-		}
-		break;
+		// Ensure capsule is disabled.
+		player->movementCapsule->SetCollisionResponseToAllChannels(ECR_Ignore);
+	}
+	break;
 #endif
-		case EVRMovementMode::Teleport:
+	case EVRMovementMode::Teleport:
+	{
+		// Initialise teleport width as the ring mesh width. Box extent is half the size of the box that fits the component.
+		teleportWidth = teleportRing->Bounds.BoxExtent.X;
+
+		// Disable capsule collision if in teleport mode.
+		player->movementCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+	break;
+	case EVRMovementMode::Lean:
+	{
+		// Only used in leaning movement.
+		canApplyVignette = false;
+	}
+	// Still call speed ramp, joystick and swinging arms code as its still needed so no break.
+	case EVRMovementMode::SpeedRamp: case EVRMovementMode::Joystick:  case EVRMovementMode::SwingingArms:
+	{
+		// Setup the capsule.
+		player->movementCapsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		player->movementCapsule->SetCollisionProfileName("PlayerCapsule");
+
+		// Set speed of floating movement component.
+		player->floatingMovement->MaxSpeed = walkingSpeed;
+
+		// Setup material for vignette so the opacity can be adjusted.
+		if (vignetteDuringMovement)
 		{
-			// Initialise teleport width as the ring mesh width. Box extent is half the size of the box that fits the component.
-			teleportWidth = teleportRing->Bounds.BoxExtent.X;
-
-			// Disable capsule collision if in teleport mode.
-			player->movementCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		}	
-		break;
-		case EVRMovementMode::Lean:
-			
-			// Only used in leaning movement.
-			canApplyVignette = false;
-
-		// Still call speed ramp, joystick and swinging arms code as its still needed so no break.
-		case EVRMovementMode::SpeedRamp: case EVRMovementMode::Joystick:  case EVRMovementMode::SwingingArms:
-		{
-			// Setup the capsule.
-			player->movementCapsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-			player->movementCapsule->SetCollisionProfileName("PlayerCapsule");
-
-			// Set speed of floating movement component.
-			player->floatingMovement->MaxSpeed = walkingSpeed;
-
-			// Setup material for vignette so the opacity can be adjusted.
-			if (vignetteDuringMovement)
+			if (vingetteMATInstance)
 			{
-				if (vingetteMATInstance)
-				{
-					player->vignette->SetActive(true);
-					player->vignette->SetVisibility(true);
-					vignetteMAT = player->vignette->CreateDynamicMaterialInstance(0, vingetteMATInstance);
-					vignetteMAT->SetScalarParameterValue("opacity", 1.0f);
-				}
-				else UE_LOG(LogVRMovement, Warning, TEXT("Null refference for the vignette material instance in the vr movement class..."));
+				player->vignette->SetActive(true);
+				player->vignette->SetVisibility(true);
+				vignetteMAT = player->vignette->CreateDynamicMaterialInstance(0, vingetteMATInstance);
+				vignetteMAT->SetScalarParameterValue("opacity", 1.0f);
 			}
-		}	
-		break;
+			else UE_LOG(LogVRMovement, Warning, TEXT("Null refference for the vignette material instance in the vr movement class..."));
+		}
+	}
+	break;
 	}
 }
 
@@ -235,7 +241,7 @@ void AVRMovement::EnableCapsule(bool enable)
 	}
 }
 
-void AVRMovement::UpdateMovement(AVRHand* movementHand)
+void AVRMovement::UpdateMovement(AVRHand* movementHand, bool released)
 {
 	// Ensure player is valid.
 	if (player)
@@ -243,57 +249,8 @@ void AVRMovement::UpdateMovement(AVRHand* movementHand)
 		if (movementHand)
 		{
 			// Initialise the current moving hand before updating any movement properties.
-			currentMovingHand = movementHand;
+			if (!released) currentMovingHand = movementHand;
 
-			// Update the current movement mode.
-			switch (currentMovementMode)
-			{
-#if WITH_EDITOR
-				case EVRMovementMode::Developer:
-
-					// Update the teleport while key is held down.
-					UpdateTeleport(movementHand);
-				break;
-#endif
-				case EVRMovementMode::Teleport:
-
-					// check for camera fade to prevent accidental presses.
-					if (!teleporting)
-					{
-						// Update the teleport while key is held down.
-						UpdateTeleport(movementHand);
-					}				
-				break;
-
-				// Do not break lean case as it needs to run the speed ramp and joystick code also.
-				case EVRMovementMode::Lean:
-
-					// Disable the teleport ring.
-					teleportRing->SetVisibility(false, true);
-
-				case EVRMovementMode::SpeedRamp:
-				case EVRMovementMode::Joystick:
-				case EVRMovementMode::SwingingArms:
-
-					// Update the controller movement mode.
-					UpdateControllerMovement(movementHand);		
-				break;
-			}
-
-			// Adjust first move variable.
-			if (firstMove) firstMove = false;
-		}	
-	}
-	else UE_LOG(LogVRMovement, Warning, TEXT("Null refference to player in the vr movement component. Cannot update movement..."));
-}
-
-void AVRMovement::ReleaseMovement()
-{
-	// Ensure player is valid.
-	if (player)
-	{
-		if (currentMovingHand)
-		{
 			// Update the current movement mode.
 			switch (currentMovementMode)
 			{
@@ -301,8 +258,13 @@ void AVRMovement::ReleaseMovement()
 			case EVRMovementMode::Developer:
 
 				// Update the teleport while key is held down and teleport when released.
-				if (lastTeleportValid) TeleportPlayer();
-				else DestroyTeleportSpline();
+				if (released)
+				{
+					if (lastTeleportValid) TeleportPlayer();
+					else DestroyTeleportSpline();
+				}
+				else UpdateTeleport(movementHand);
+
 				break;
 #endif
 			case EVRMovementMode::Teleport:
@@ -311,15 +273,20 @@ void AVRMovement::ReleaseMovement()
 				if (!teleporting)
 				{
 					// Update the teleport while key is held down and teleport when released.
-					if (lastTeleportValid)
+					if (released)
 					{
-						if (teleportFade) TeleportCameraFade();
-						else TeleportPlayer();
+						if (lastTeleportValid)
+						{
+							if (teleportFade) TeleportCameraFade();
+							else TeleportPlayer();
+						}
+						else DestroyTeleportSpline();
 					}
-					else DestroyTeleportSpline();
+					else UpdateTeleport(movementHand);
 				}
+
 				break;
-			// Do not break lean case as it needs to run the speed ramp and joystick code also.
+				// Do not break lean case as it needs to run the speed ramp and joystick code also.
 			case EVRMovementMode::Lean:
 
 				// Disable the teleport ring.
@@ -330,16 +297,22 @@ void AVRMovement::ReleaseMovement()
 			case EVRMovementMode::SwingingArms:
 
 				// Update the controller movement mode. If released and vignette is enabled ramp the opacity back down to invisible at the specified speed.
-				if (vignetteDuringMovement && vignetteMAT) GetWorld()->GetTimerManager().SetTimer(vignetteTimer, this, &AVRMovement::ResetVignette, 0.01f, true);
+				if (released && vignetteDuringMovement && vignetteMAT) GetWorld()->GetTimerManager().SetTimer(vignetteTimer, this, &AVRMovement::ResetVignette, 0.01f, true);
+				else UpdateControllerMovement(movementHand);
+
 				break;
 			}
 
-			// Adjust first move variable and remove the current moving hand.
-			firstMove = true;
-			currentMovingHand = nullptr;
+			// Adjust first move variable.
+			if (released)
+			{
+				firstMove = true;
+				currentMovingHand = nullptr;
+			}
+			else if (firstMove) firstMove = false;
 		}
 	}
-	else UE_LOG(LogVRMovement, Warning, TEXT("Null refference to player in the vr movement component. Cannot release movement..."));
+	else UE_LOG(LogVRMovement, Warning, TEXT("Null refference to player in the vr movement component. Cannot update movement..."));
 }
 
 #if WITH_EDITOR
@@ -357,7 +330,7 @@ void AVRMovement::SetupDeveloperMovement()
 	// Setup developer movement controls.
 	UInputComponent* playerInput = player->InputComponent;
 
-	//Fix for crash when trying to possess after starting the game in simulate mode (doesn't always setup input still)
+	//Fix for crash when trying to possess after starting the game in simulate mode ( doesn't always setup input still)
 	if (!playerInput)
 		EnableInput(UGameplayStatics::GetPlayerController(this, 0));
 
@@ -465,7 +438,7 @@ void AVRMovement::AttatchHand(AVRHand* handToAttach)
 {
 	// Attachment rules.
 	FAttachmentTransformRules handAttatchRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, true);
-	
+
 	// Change motion source of controller to prevent controllers changing position while in dev mode.
 	handToAttach->controller->MotionSource = FName("Special_9");
 
@@ -478,7 +451,7 @@ void AVRMovement::AttatchHand(AVRHand* handToAttach)
 		handToAttach->SetActorRelativeLocation(leftOffset);
 	}
 	else handToAttach->SetActorRelativeLocation(devHandOffset);
-	
+
 	// Adjust rotation to ensure the hands are facing in the correct direction.
 	handToAttach->SetActorRelativeRotation(FRotator(20.0f, 0.0f, 0.0f));
 }
@@ -540,24 +513,15 @@ void AVRMovement::UpdateControllerMovement(AVRHand* movementHand)
 	FVector capsuleOffset = player->movementCapsule->GetComponentLocation() - player->camera->GetComponentLocation();
 	capsuleOffset.Z = 0;
 	float maxOffsetSizeBeforeReset = player->movementCapsule->GetUnscaledCapsuleRadius();
-	// If in lean mode don't reset the capsule until the max offset size has been reached.
-	if (currentMovementMode == EVRMovementMode::Lean)
-	{
-		maxOffsetSizeBeforeReset = maxMovementOffsetRadius;
-
-		// Reset the capsule positioning on the first move in lean movement to avoid player confusion.
-		if (firstMove) goto ResetCapsule;
-	}
 
 	// If the capsule is not close enough to the player reset its position and reposition the player inside.
-	if (capsuleOffset.Size() > maxOffsetSizeBeforeReset)
+	if (capsuleOffset.Size() > maxOffsetSizeBeforeReset && currentMovementMode != EVRMovementMode::Lean)
 	{
-	ResetCapsule:
 		// NOTE: Could add some sort of validation here for checking the nav-mesh for closest available point.
 		// Move capsule to current player location.
 		FVector cameraLocation = player->camera->GetComponentLocation();
 		player->movementCapsule->SetWorldLocation(FVector(cameraLocation.X, cameraLocation.Y, player->scene->GetComponentLocation().Z + player->movementCapsule->GetUnscaledCapsuleHalfHeight()), true);
-		
+
 		// Move scene component the relative offset between the capsule and camera position on the x and y axis.
 		FVector cameraCapsuleOffset = player->movementCapsule->GetComponentTransform().InverseTransformPosition(player->camera->GetComponentLocation());
 		cameraCapsuleOffset.Z = 0.0f;
@@ -576,7 +540,7 @@ void AVRMovement::UpdateControllerMovement(AVRHand* movementHand)
 		else if (currentDirectionMode == EVRDirectionMode::Controller) controllerDirectionNoZ = movementHand->controller->GetForwardVector();
 
 		// Get speed ramp scale.
-		speedScale = (-movementHand->thumbstick.Y + 1) / 2;
+		speedScale = FMath::Clamp(-movementHand->thumbstick.Y, 0.0f, 1.0f);
 	}
 	else if (currentMovementMode == EVRMovementMode::Joystick)
 	{
@@ -613,9 +577,10 @@ void AVRMovement::UpdateControllerMovement(AVRHand* movementHand)
 		// If the current offset of the head is greater than the minimum amount required to start moving continue.
 		if (currentOffset.Size() > minMovementOffsetRadius)
 		{
+			// Get direction based off the offset of the HMD to the capsule.
 			controllerDirectionNoZ = currentOffset;
-			// Normalize the direction and setup the speed scaler.
 			controllerDirectionNoZ.Normalize();
+
 			// Get the speed space by getting the normalized float distance between the min and max location. scale = current / max
 			speedScale = (currentOffset.Size() - minMovementOffsetRadius) / (maxMovementOffsetRadius - minMovementOffsetRadius);
 		}
@@ -635,20 +600,22 @@ void AVRMovement::UpdateControllerMovement(AVRHand* movementHand)
 	}
 	else if (currentMovementMode == EVRMovementMode::SwingingArms)
 	{
+		// If its first move use last as current.
 		if (firstMove)
 		{
-			originalMovementLocation = movementHand->controller->RelativeLocation;
+			originalMovementLocation = movementHand->controller->GetComponentLocation();
 			lastMovementLocation = originalMovementLocation;
 		}
-		// Use relative positions to the room location to find difference between hand locations, as falling in the world will affect this if it was calculated from world positions.
-		// Get the current so we can find the offset between frames.
-		FVector currentMovementLocation = movementHand->controller->RelativeLocation;
-		// Use this offset with the movement scalar value that will adjust how much movement happen over given distances.
-		FVector movementDifference = lastMovementLocation - currentMovementLocation;
+
+		// Get the current movement location of the controller in the world.
+		FVector currentMovementLocation = movementHand->controller->GetComponentLocation();
+		FVector movementDirection = lastMovementLocation - currentMovementLocation;
+
 		// Get movement direction and speed scale.
-		controllerDirectionNoZ = movementDifference.GetSafeNormal();
-		speedScale = FMath::Clamp(movementDifference.Size(), 0.0f, 20.0f) / 20.0f;
+		controllerDirectionNoZ = movementDirection.GetSafeNormal();
+		speedScale = FMath::Clamp(movementDirection.Size(), 0.0f, 20.0f) / 20.0f;
 		speedScale *= swingingArmsSpeed;
+
 		// Save this frames current as last movement so it can be used next frame.
 		lastMovementLocation = currentMovementLocation;
 	}
@@ -693,7 +660,7 @@ void AVRMovement::UpdateTeleport(AVRHand* movementHand)
 
 	// Create the teleport spline.
 	FVector splineEndLocation;
-	FTransform splineStartTrasform = movementHand->grabCollider->GetComponentTransform();
+	FTransform splineStartTrasform = movementHand->movementTarget->GetComponentTransform();
 	bool validLocation = CreateTeleportSpline(splineStartTrasform, splineEndLocation);
 
 	if (validLocation)
@@ -725,7 +692,7 @@ void AVRMovement::UpdateTeleport(AVRHand* movementHand)
 			// Show the teleport meshes at the found valid location/rotation if its enabled.
 			teleportRing->SetWorldLocationAndRotation(lastValidTeleportLocation, teleportRotation, false, nullptr, ETeleportType::TeleportPhysics);
 			teleportRing->SetVisibility(true);
-			
+
 			// Update the teleporting components materials to valid.
 			UpdateTeleportMaterials(true);
 		}
@@ -770,26 +737,13 @@ bool AVRMovement::CreateTeleportSpline(FTransform startTransform, FVector& outLo
 	FHitResult hit;
 	TArray<FVector> outPathPositions;
 	FVector outLastTraceDestination;
+
 	// Ignore self and ignore the player and anything thats currently held in the hand.
 	TArray<AActor*> actorsToIgnore;
 	actorsToIgnore.Add(player);
 	actorsToIgnore.Add(this);
 	actorsToIgnore.Add(currentMovingHand);
 	actorsToIgnore.Add(currentMovingHand->otherHand);
-	if (currentMovingHand->objectInHand)
-	{
-		AActor* actorInHand = Cast<AActor>(currentMovingHand->objectInHand);
-		UPrimitiveComponent* compInHand = Cast<UPrimitiveComponent>(currentMovingHand->objectInHand);
-		if (actorInHand) actorsToIgnore.Add(actorInHand);
-		else if (compInHand && compInHand->GetOwner()) actorsToIgnore.Add(compInHand->GetOwner());
-	}
-	if (currentMovingHand->otherHand->objectInHand)
-	{
-		AActor* actorInHand = Cast<AActor>(currentMovingHand->otherHand->objectInHand);
-		UPrimitiveComponent* compInHand = Cast<UPrimitiveComponent>(currentMovingHand->otherHand->objectInHand);
-		if (actorInHand) actorsToIgnore.Add(actorInHand);
-		else if (compInHand && compInHand->GetOwner()) actorsToIgnore.Add(compInHand->GetOwner());
-	}
 
 	// Projectile trace the spline hit location and use each stage of the trace to create a spline from the shape.
 	UGameplayStatics::Blueprint_PredictProjectilePath_ByTraceChannel(GetWorld(), hit, outPathPositions, outLastTraceDestination, teleportSpline->GetComponentLocation(), teleportSpline->GetForwardVector() * teleportDistance, true, 0.0f, ECC_Visibility, false, actorsToIgnore, EDrawDebugTrace::None, 0.0f, 30.0f, 2.0f, teleportGravity);
@@ -853,7 +807,7 @@ bool AVRMovement::ValidateTeleportLocation(FVector& location)
 {
 	UNavigationSystemV1* navSystem = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem());
 	if (navSystem)
-	{		
+	{
 		// Get the nav properties from the players movement component to determine player width, height etc.
 		FVector foundLocation;
 		FVector searchingExtent = FVector(teleportSearchDistance, teleportSearchDistance, teleportSearchDistance);
@@ -910,16 +864,13 @@ void AVRMovement::TeleportCameraFade()
 		teleportTimerDel.BindUFunction(this, FName("TeleportPlayer"));
 		GetWorld()->GetTimerManager().SetTimer(teleportTimer, teleportTimerDel, cameraFadeTimeToLast, false);
 		teleporting = true;
-	}	
+	}
 }
 
 void AVRMovement::TeleportPlayer()
 {
 	// If the teleport spline is still visible destroy it.
 	if (splineMeshes.Num() > 0) DestroyTeleportSpline();
-
-	// Disable all collisions while teleporting then re-enable when in new location to prevent accidental punches from the hands etc...
-	player->ActivateAllCollision(false);
 
 	// If in developer mode teleport capsule and raise from floor and teleport.
 	if (currentMovementMode == EVRMovementMode::Developer)
@@ -931,7 +882,7 @@ void AVRMovement::TeleportPlayer()
 		player->Teleported();
 	}
 	// Otherwise find out the correct location for the capsule and the room relative to said capsule.
-	else 
+	else
 	{
 		// Move the players location to the locationToTeleport facing in the rotationToFace.
 		if (teleportRotation == FRotator::ZeroRotator) player->MovePlayer(lastValidTeleportLocation);
@@ -947,7 +898,4 @@ void AVRMovement::TeleportPlayer()
 
 	// Play teleport sound if it is not null.
 	if (teleportSound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), teleportSound, player->camera->GetComponentLocation());
-
-	// Re-enable player collision once there is no overlaps on each component individually. (See activate all collisions for more info)
-	player->ActivateAllCollision(true);
 }

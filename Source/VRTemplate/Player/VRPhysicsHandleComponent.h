@@ -4,8 +4,7 @@
 #include "CoreMinimal.h"
 #include "UObject/ObjectMacros.h"
 #include "Components/ActorComponent.h"
-#include "Project/Globals.h"
-#include <PxSimpleTypes.h>
+#include "Globals.h"
 #include "VRPhysicsHandleComponent.generated.h"
 
 /* Declare log type for the VR Physics Handle class. */
@@ -155,6 +154,10 @@ public:
 	 * Also logs when the joint values are updated and what values it is updated with. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PhysicsHandle")
 	bool debug;
+
+	/* Pointer to the tracked component so the positions can be updated within this class. */
+	UPROPERTY(BlueprintReadOnly, Category = "Physics")
+	UPrimitiveComponent* targetComponent;
 
 	float constraintLinearMaxForce; /* If linear soft constraint is enabled, this is the max amount of force that can be added to get to the constraints target location. */
 	float constraintAgularMaxForce; /* If angular soft constraint is enabled, this is the max amount of force that can be added to get to the constraints target rotation. */
@@ -310,10 +313,9 @@ public:
 	void UpdateHandleTargetRotation(FRotator updatedRotation);
 
 protected:
-	
+
 	physx::PxD6Joint* joint; /* Pointer to PhysX joint created when a component is grabbed. */
 	physx::PxRigidDynamic* targetActor; /* Pointer to target actor created in the create joint function to constrain a given component to. */
-	UPrimitiveComponent* targetComponent; /* Pointer to the tracked component so the positions can be updated within this class. */
 	FTransform targetOffset; /* Relative offset transform from the target component that the constraint was initialized / positioned. */
 	bool rotationConstraint; /* Is the rotation constraint currently active. */
 	FPhysicsHandleData originalData; /* Original physics handle data of this class, in case its replaced on creating the constraint. */

@@ -171,8 +171,10 @@ void UVRPhysicsHandleComponent::CreateJoint(UPrimitiveComponent* comp, UPrimitiv
  	{
  		return;
  	}
- 
- 	FPhysicsCommand::ExecuteWrite(BodyInstance->ActorHandle, [&](const FPhysicsActorHandle& Actor)
+
+	// Get actor handle.
+	const FPhysicsActorHandle& ActorHandle = BodyInstance->GetPhysicsActorHandle();
+ 	FPhysicsCommand::ExecuteWrite(ActorHandle, [&](const FPhysicsActorHandle& Actor)
  	{
  		if (PxRigidActor* phsyActor = FPhysicsInterface::GetPxRigidActor_AssumesLocked(Actor))
  		{

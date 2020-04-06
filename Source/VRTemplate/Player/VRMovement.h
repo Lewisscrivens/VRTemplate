@@ -5,7 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "NavigationData.h"
 #include "NavQueryFilter.h"
-#include "Project/Globals.h"
+#include "Globals.h"
 #include "VRMovement.generated.h"
 
 /* Define this actors log category. */
@@ -54,16 +54,14 @@ enum class EVRInput : uint8
 	HideRight,
 };
 
-/* Movement class. */
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent), Blueprintable, BlueprintType, hidecategories = (Rendering, Replication, Input, Actor, LOD, Cooking))
+/* The VRPawns Movement component class containing all virtual reality movement functionality.
+ * NOTE: If movement mode is changed during runtime the SetupMovement function must be ran afterwards for the class to work correctly... */
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Blueprintable, BlueprintType, hidecategories = (Rendering, Replication, Input, Actor, LOD, Cooking))
 class VRTEMPLATE_API AVRMovement : public AActor
 {
 	GENERATED_BODY()
 
-public:	
-	
-	/* Constructor. */
-	AVRMovement();
+public:
 
 	/* Scene component to act as root to any components used for movement. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
@@ -109,9 +107,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Teleport")
 	TArray<TEnumAsByte<EObjectTypeQuery>> teleportableTypes;
 
-	/* Array destination of the current agent properties from navigation system settings in the project settings... */
+	/* Array destination of the current agent properties from navigation system settings in the project settings...
+	 * NOTE: By default only agent in the nav system properties named player at index 0... */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Teleport")
-	int agentID = 1;
+	int agentID = 0;
 
 	/* Material color for invalid teleport location. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Teleport")
@@ -166,7 +165,7 @@ public:
 	float handMovementSpeed;
 
 	/* Amount forward and backward the hands can be translated. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement|WalkingMovement", meta = (ClampMin = "100.0", UIMin = "300.0", ClampMax = "100.0", UIMax = "300.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement|WalkingMovement", meta = (ClampMin = "100.0", UIMin = "100.0", ClampMax = "300.0", UIMax = "300.0"))
 	float walkingSpeed;
 
 	/* Will the peripherals be darkened during walking movement to decrease motion sickness. */
@@ -205,14 +204,17 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Movement|Developer")
 	float InputRebindAttemptTimer;
 
+	/* Reff to player controller. */
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	APlayerController* playerController;
+
 	AVRPawn* player; /* Used across the class for accessing different variables for example the player capsule. */
 	AVRHand* currentMovingHand; /* The current hand class that is activating movement. */
 
 private:
 
-	bool firstMove;
-	bool inAir;
-	APlayerController* playerController;
+	bool firstMove;// Used to determine the first frame of movement.
+	bool inAir;// Is the player currently in the air.
 	FVector originalMovementLocation;
 	FVector lastMovementLocation;
 
@@ -241,10 +243,14 @@ private:
 	/////////////////////////////////////////////////
 
 #if WITH_EDITOR
-	bool leftFrozen, rightFrozen; /* Which hands are currently frozen in place. */
+	/* Which hands are currently frozen in place. */
+	bool leftFrozen, rightFrozen;
 #endif
 
-public:	
+public:
+
+	/* Constructor. */
+	AVRMovement();
 
 	/* Frame. */
 	virtual void Tick(float DeltaTime) override;
@@ -255,16 +261,13 @@ public:
 
 	/* Movement begin play called from pawns begin play. */
 	UFUNCTION(BlueprintCallable)
-	void SetupMovement(AVRPawn* playerPawn, bool dev = false);
+		void SetupMovement(AVRPawn* playerPawn, bool dev = false);
 
 	/* Function to enable/disable the capsule collisions physics for gravity. */
 	void EnableCapsule(bool enable = true);
 
-	/* Function to update the different types of vr movement depending on current mode selected. */
-	void UpdateMovement(AVRHand* movementHand);
-
-	/* Ran when the movement has been released/disabled. */
-	void ReleaseMovement();
+	/* Function to update the different types of vr movement depending on current mode selected, also ran on release execute code on release. */
+	void UpdateMovement(AVRHand* movementHand, bool released = false);
 
 	/* Function to update while the teleport button is down. */
 	void UpdateControllerMovement(AVRHand* movementHand);
@@ -326,7 +329,7 @@ public:
 	bool IsKeyDown(FName key);
 
 	/* Input function for any development movement. */
-	void UpdateDeveloperMovement(float deltaTime);	
+	void UpdateDeveloperMovement(float deltaTime);
 #endif
 };
 

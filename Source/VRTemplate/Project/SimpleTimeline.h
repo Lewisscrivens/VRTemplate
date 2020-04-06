@@ -8,20 +8,18 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogSimpleTimeline, Log, All);
 
-/* Define used classes. */
-class UserClass;
-
 /* Simpler class for implementing a time line via C++. */
 UCLASS()
-class VRTEMPLATE_API USimpleTimeline : public UActorComponent
+class USimpleTimeline : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
 
+	/* Constructor. */
 	USimpleTimeline();
 
-	//Time line used to morph the player
+	/* Time line used to morph the player. */
 	UPROPERTY()
 	UTimelineComponent* timelineComponent;
 

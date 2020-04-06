@@ -15,6 +15,7 @@
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
 #include "Components/AudioComponent.h"
+#include "Components/SphereComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimBlueprint.h"
 #include "Animation/AnimBlueprintGeneratedClass.h"
@@ -27,6 +28,8 @@
 #include "Project/EffectsContainer.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include <Sound/SoundBase.h>
+#include "WidgetInteractionComponent.h"
+#include "WidgetComponent.h"
 
 DEFINE_LOG_CATEGORY(LogHand);
 
@@ -77,6 +80,29 @@ AVRHand::AVRHand()
 	grabHandle = CreateDefaultSubobject<UVRPhysicsHandleComponent>("GrabHandle");
 	physicsHandle = CreateDefaultSubobject<UVRPhysicsHandleComponent>("PhysicsHandle");
 
+	// Setup widget interaction components.
+	widgetOverlap = CreateDefaultSubobject<USphereComponent>("WidgetOverlap");
+	widgetOverlap->SetMobility(EComponentMobility::Movable);
+	widgetOverlap->SetupAttachment(handSkel);
+	widgetOverlap->SetSphereRadius(3.0f);
+	widgetOverlap->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	widgetOverlap->SetCollisionObjectType(ECC_Hand);
+	widgetOverlap->SetCollisionResponseToAllChannels(ECR_Ignore);
+	widgetOverlap->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	widgetInteractor = CreateDefaultSubobject<UWidgetInteractionComponent>(TEXT("WidgetInteractor"));
+	widgetInteractor->SetupAttachment(widgetOverlap);
+	widgetInteractor->InteractionDistance = 30.0f;
+	widgetInteractor->InteractionSource = EWidgetInteractionSource::World;
+	widgetInteractor->bEnableHitTesting = true;
+
+	// Ensure fast widget path is disabled as it optimizes away the functionality we need when building in VR.
+	GSlateFastWidgetPath = 0;
+
+	// Setup movement direction component.
+	movementTarget = CreateDefaultSubobject<USceneComponent>("MovementTarget");
+	movementTarget->SetMobility(EComponentMobility::Movable);
+	movementTarget->SetupAttachment(handSkel);
+
 	// Initialise the hands audio component.
 	handAudio = CreateDefaultSubobject<UAudioComponent>("HandAudio");
 	handAudio->SetupAttachment(grabCollider);
@@ -118,6 +144,15 @@ void AVRHand::BeginPlay()
 	FName handRootBoneName = handSkel->GetBoneName(0);
 	physicsHandle->CreateJointAndFollowLocationWithRotation(physicsCollider, handSkel, NAME_None, physicsCollider->GetComponentLocation(),
 		physicsCollider->GetComponentRotation());
+
+	// Setup widget interaction attachments.
+	widgetOverlap->AttachToComponent(handSkel, FAttachmentTransformRules::SnapToTargetNotIncludingScale, "FingerSocket");
+
+	// Setup delegate for overlapping widget component.
+	if (!widgetOverlap->OnComponentBeginOverlap.Contains(this, "WidgetInteractorOverlapBegin"))
+	{
+		widgetOverlap->OnComponentBeginOverlap.AddDynamic(this, &AVRHand::WidgetInteractorOverlapBegin);
+	}
 }
 
 void AVRHand::SetupHand(AVRHand * oppositeHand, AVRPawn* playerRef, bool dev)
@@ -178,6 +213,22 @@ void AVRHand::Tick(float DeltaTime)
 	}
 	// Otherwise look for objects to grab...
 	else if (!gripping) CheckForOverlappingActors();
+}
+
+void AVRHand::WidgetInteractorOverlapBegin(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	// If the other component was a widget press it.
+	if (UWidgetComponent* widgetOverlap = Cast<UWidgetComponent>(OtherComp))
+	{
+		// Rotate the widget interactor to face what we have overlapped with and press then release the pointer key.
+		FVector worldDirection = widgetInteractor->GetComponentLocation() - SweepResult.Location;
+		widgetInteractor->SetWorldRotation(worldDirection.Rotation());
+		widgetInteractor->PressPointerKey(EKeys::LeftMouseButton);
+		widgetInteractor->ReleasePointerKey(EKeys::LeftMouseButton);
+
+		// Rumble the controller to give feedback that the button was successfully pressed.
+		PlayFeedback();
+	}
 }
 
 void AVRHand::Grab()

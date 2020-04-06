@@ -109,7 +109,7 @@ void AVRPawn::PostInitializeComponents()
 		movement->AttachToComponent(scene, movementAttatchRules);
 		movement->SetOwner(this);
 	}
-	
+
 #if WITH_EDITOR
 	// Enable developer mode if the HMD headset is enabled.
 	if (!UHeadMountedDisplayFunctionLibrary::IsHeadMountedDisplayEnabled())
@@ -118,7 +118,7 @@ void AVRPawn::PostInitializeComponents()
 		devModeActive = true;
 	}
 #endif
-	}
+}
 
 void AVRPawn::BeginPlay()
 {
@@ -186,8 +186,8 @@ void AVRPawn::PostUpdateTick(float DeltaTime)
 	{
 		// If there is a hand moving, update the vr movement component.
 		if (movingHand)	movement->UpdateMovement(movingHand);
-		// Otherwise if the here is no hand moving and there was in the movement release the movement.
-		else if (movement->currentMovingHand) movement->ReleaseMovement();
+		// End the movement if its still set in the movement class.
+		else if (movement->currentMovingHand) movement->UpdateMovement(movement->currentMovingHand, true);
 	}
 
 	// Update the current collision properties based from the tracking of the HMD and then each hand to prevent physics actors being affected by repositioning these components.
@@ -223,30 +223,6 @@ void AVRPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("ThumbstickLeft_Y", this, &AVRPawn::ThumbstickLeftY);
 	PlayerInputComponent->BindAxis("ThumbstickRight_X", this, &AVRPawn::ThumbstickRightX);
 	PlayerInputComponent->BindAxis("ThumbstickRight_Y", this, &AVRPawn::ThumbstickRightY);
-}
-
-void AVRPawn::InteractLeft(bool pressed)
-{
-	if (pressed)
-	{
-
-	}
-	else
-	{
-
-	}
-}
-
-void AVRPawn::InteractRight(bool pressed)
-{
-	if (pressed)
-	{
-
-	}
-	else
-	{
-
-	}
 }
 
 void AVRPawn::GrabLeft(bool pressed)
@@ -289,6 +265,7 @@ void AVRPawn::ThumbLeft(bool pressed)
 			bool moveEnabled = false;
 			switch (movement->currentMovementMode)
 			{
+			case EVRMovementMode::Developer:
 			case EVRMovementMode::Teleport:
 			case EVRMovementMode::SwingingArms:
 			case EVRMovementMode::Lean:
@@ -318,6 +295,7 @@ void AVRPawn::ThumbRight(bool pressed)
 			bool moveEnabled = false;
 			switch (movement->currentMovementMode)
 			{
+			case EVRMovementMode::Developer:
 			case EVRMovementMode::Teleport:
 			case EVRMovementMode::SwingingArms:
 			case EVRMovementMode::Lean:
@@ -593,12 +571,14 @@ void AVRPawn::CollisionDelay()
 
 UEffectsContainer* AVRPawn::GetPawnEffects()
 {
-	if (pawnEffects && pawnEffects->IsValidLowLevel()) return pawnEffects;
-	else return nullptr;
+	return pawnEffects;
 }
 
 void FPostUpdateTick::ExecuteTick(float DeltaTime, enum ELevelTick TickType, ENamedThreads::Type CurrentThread, const FGraphEventRef& MyCompletionGraphEvent)
 {
 	// Call the AVRPawn's second tick function.
-	if (Target) Target->PostUpdateTick(DeltaTime);
+	if (Target)
+	{
+		Target->PostUpdateTick(DeltaTime);
+	}
 }
