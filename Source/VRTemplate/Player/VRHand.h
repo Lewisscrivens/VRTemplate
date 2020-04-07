@@ -27,6 +27,15 @@ class UWidgetInteractionComponent;
 class USphereComponent;
 class UWidgetComponent;
 
+/* Controller type enum for selecting the offset of each hand. */
+UENUM(BlueprintType)
+enum class EVRController : uint8
+{
+	Index,
+	Vive,
+	Oculus
+};
+
 /* NOTE: Just flipping a mesh on an axis to create a left and right hand from the said mesh will break its physics asset in version UE4.23
  * NOTE: HandSkel collision used for interacting with grabbable etc. Constrained components must use physicsCollider to prevent constraint breakage. */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -97,9 +106,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hand")
 	EControllerHand handEnum;
 
-	/* The name of this controller. */
+	/* The current type of controller to set the hand class up with. 
+	 * NOTE: Use SetControllerType to change this value during runtime. Or run SetupControllerOffsets after changing it. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hand")
-	FName controllerName;
+	EVRController controllerType;
 
 	/* Pointer to store any overlapping objects that can be grabbed and contain the hands interface. */
 	UPROPERTY(BlueprintReadOnly, Category = "Hand")
@@ -226,6 +236,15 @@ public:
 	 * @Param playerRef, Pointer to the VRPawn class. 
 	 * @Param dev, Is developer mode activated. */
 	void SetupHand(AVRHand * oppositeHand, AVRPawn* playerRef, bool dev);
+
+	/* Function to change the type of controller this hand is.
+	 * NOTE: Also handles setting up the controller offsets. */
+	UFUNCTION(BlueprintCallable, Category = "Hand")
+	void SetControllerType(EVRController type);
+
+	/* Function to setup the current controller offset from the currentController type selected in this class. */
+	UFUNCTION(BlueprintCallable, Category = "Hand")
+	void SetupControllerOffset();
 
 	/* Update the tracked state and collisions of this controller. */
 	void UpdateControllerTrackedState();

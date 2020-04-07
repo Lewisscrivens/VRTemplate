@@ -110,6 +110,7 @@ AVRHand::AVRHand()
 
 	// Initialise default variables.
 	handEnum = EControllerHand::Left;
+	controllerType = EVRController::Index;
 	objectToGrab = nullptr;
 	objectInHand = nullptr;
 	grabbing = false;
@@ -153,6 +154,9 @@ void AVRHand::BeginPlay()
 	{
 		widgetOverlap->OnComponentBeginOverlap.AddDynamic(this, &AVRHand::WidgetInteractorOverlapBegin);
 	}
+
+	// Set up the controller offsets for the current type of controller selected.
+	if (!devModeEnabled) SetupControllerOffset();
 }
 
 void AVRHand::SetupHand(AVRHand * oppositeHand, AVRPawn* playerRef, bool dev)
@@ -169,6 +173,30 @@ void AVRHand::SetupHand(AVRHand * oppositeHand, AVRPawn* playerRef, bool dev)
 
 	// Save the original transform of the hand for calculating offsets.
 	originalHandTransform = controller->GetComponentTransform();
+}
+
+void AVRHand::SetControllerType(EVRController type)
+{
+	controllerType = type;
+	SetupControllerOffset();
+}
+
+void AVRHand::SetupControllerOffset()
+{
+	// Reset the hand transform. (Default for VIVE controller)
+	handRoot->SetRelativeTransform(FTransform(FRotator(0.0f), FVector(0.0f), FVector(1.0f)));
+
+	// Depending on the selected option change the offset of the controller...
+	switch (controllerType)
+	{
+	case EVRController::Index:
+		handRoot->AddLocalOffset(FVector(-2.4f, 0.0f, -5.3f));
+		handRoot->AddLocalRotation(FRotator(-30.0f, 0.0f, 0.0f));
+	break;
+	case EVRController::Oculus:
+		handRoot->AddLocalOffset(FVector(7.5f, 0.0f, 0.0f));
+	break;
+	}
 }
 
 void AVRHand::Tick(float DeltaTime)

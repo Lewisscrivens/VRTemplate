@@ -45,7 +45,6 @@ struct TStructOpsTypeTraits<FPostUpdateTick> : public TStructOpsTypeTraitsBase2<
 	enum { WithCopy = false };
 };
 
-
 /* VR Pawn system that connected the VRMovement component and VRHands, manages input across the hands and the movement class. */
 UCLASS()
 class VRTEMPLATE_API AVRPawn : public APawn
@@ -97,6 +96,7 @@ public:
 	/* The template class/BP for the right hand. */
 	UPROPERTY(EditDefaultsOnly, Category = "Pawn")
 	TSubclassOf<AVRHand> rightHandClass;
+
 
 	/* Container component to add feedback and audio references that are obtainable by name in code. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pawn")
