@@ -97,7 +97,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Pawn")
 	TSubclassOf<AVRHand> rightHandClass;
 
-
 	/* Container component to add feedback and audio references that are obtainable by name in code. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pawn")
 	UEffectsContainer* pawnEffects;

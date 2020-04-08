@@ -49,12 +49,20 @@
 #define ECC_ConstrainedComp ECC_GameTraceChannel5
 #define ECC_BlockMovement ECC_GameTraceChannel6
 #define ECC_Teleport ECC_GameTraceChannel7
+#define ECC_UI ECC_GameTraceChannel9;
 
 //===============================
-// Material destination macros.
+// Asset destinations.
 //===============================
 
-#define M_Translucent FString("/Game/Materials/MI_snapGhostMaterial")
+#define M_Translucent FString("/Game/Assets/Materials/Mesh/Misc/MI_Transparency")
+#define PM_NoFriction FString("/Game/Assets/Materials/Physics/PM_NoFriction")
+
+//===============================
+// Macro to remove debug code from builds.
+//===============================
+
+#define DEVELOPMENT 1
 
 //===============================
 // Misc

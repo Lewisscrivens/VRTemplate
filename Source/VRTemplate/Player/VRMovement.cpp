@@ -256,7 +256,7 @@ void AVRMovement::UpdateMovement(AVRHand* movementHand, bool released)
 			{
 #if WITH_EDITOR
 			case EVRMovementMode::Developer:
-
+			{
 				// Update the teleport while key is held down and teleport when released.
 				if (released)
 				{
@@ -264,8 +264,8 @@ void AVRMovement::UpdateMovement(AVRHand* movementHand, bool released)
 					else DestroyTeleportSpline();
 				}
 				else UpdateTeleport(movementHand);
-
-				break;
+			}
+			break;
 #endif
 			case EVRMovementMode::Teleport:
 
@@ -285,22 +285,22 @@ void AVRMovement::UpdateMovement(AVRHand* movementHand, bool released)
 					else UpdateTeleport(movementHand);
 				}
 
-				break;
-				// Do not break lean case as it needs to run the speed ramp and joystick code also.
+			break;
+			// Do not break lean case as it needs to run the speed ramp and joystick code also.
 			case EVRMovementMode::Lean:
-
+			{
 				// Disable the teleport ring.
 				teleportRing->SetVisibility(false, true);
-
+			}
 			case EVRMovementMode::SpeedRamp:
 			case EVRMovementMode::Joystick:
 			case EVRMovementMode::SwingingArms:
-
+			{
 				// Update the controller movement mode. If released and vignette is enabled ramp the opacity back down to invisible at the specified speed.
 				if (released && vignetteDuringMovement && vignetteMAT) GetWorld()->GetTimerManager().SetTimer(vignetteTimer, this, &AVRMovement::ResetVignette, 0.01f, true);
 				else UpdateControllerMovement(movementHand);
-
-				break;
+			}
+			break;
 			}
 
 			// Adjust first move variable.

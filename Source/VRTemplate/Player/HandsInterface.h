@@ -100,7 +100,8 @@ class UHandsInterface : public UInterface
 	GENERATED_BODY()
 };
 
-/* Interface class to hold C++ and Blueprint versions of intractable functions.... */
+/* Interface class to hold C++ and Blueprint versions of intractable functions.
+ * NOTE: Must implement the getter and setter method along with a local variable for the interactables FHandInterfaceSettings as it cannot be stored in the interface... */
 class VRTEMPLATE_API IHandsInterface
 {
 	GENERATED_BODY()
@@ -116,48 +117,72 @@ public:
 
 	/* Implementable Functions for this interface. */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Hands)
-		void GrabPressed(AVRHand* hand);
+	void GrabPressed(AVRHand* hand);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Hands)
-		void GrabReleased(AVRHand* hand);
+	void GrabReleased(AVRHand* hand);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Hands)
-		void GrabbedWhileLocked();
+	void GrabbedWhileLocked();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Hands)
-		void ReleasedWhileLocked();
+	void ReleasedWhileLocked();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Hands)
-		void GripPressed(AVRHand* hand);
+	void GripPressed(AVRHand* hand);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Hands)
-		void GripReleased();
+	void GripReleased();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Hands)
-		void Dragging(float deltaTime);
+	void Dragging(float deltaTime);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Hands)
-		void Interact(bool pressed);
+	void Interact(bool pressed);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Hands)
-		void Overlapping(AVRHand* hand);
+	void Overlapping(AVRHand* hand);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Hands)
-		void EndOverlapping(AVRHand* hand);
+	void EndOverlapping(AVRHand* hand);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Hands)
-		void Teleported();
+	void Teleported();
 
  	/* Get and set functions to allow changes from blueprint. */
  	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Hands)		
- 		FHandInterfaceSettings GetInterfaceSettings();
+ 	FHandInterfaceSettings GetInterfaceSettings();
  	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Hands)
- 		void SetInterfaceSettings(FHandInterfaceSettings newInterfaceSettings);
+ 	void SetInterfaceSettings(FHandInterfaceSettings newInterfaceSettings);
 
 	/* Setup functions for other classes overriding this interfaces functions */
+
+	/* Ran when trigger is pressed all the way down. */
 	virtual void GrabPressed_Implementation(AVRHand* hand);
+
+	/* Ran when the trigger is released. */
 	virtual void GrabReleased_Implementation(AVRHand* hand);
+
+	/* Ran if the grabbable is locked to the hand and the trigger is pressed all the way down. */
 	virtual void GrabbedWhileLocked_Implementation();
+
+	/* Ran if the hand is locked to an interactable and the trigger is released. */
 	virtual void ReleasedWhileLocked_Implementation();
+
+	/* Ran when the controller is squeezed. */
 	virtual void GripPressed_Implementation(AVRHand* hand);
+
+	/* Ran when the controller is un-squeezed. */
 	virtual void GripReleased_Implementation();
+
+	/* Ticking function that is ran while an interactable is grabbed. */
 	virtual void Dragging_Implementation(float deltaTime);
+
+	/* Ran when the thumb button is pressed while something is being held. For example the trigger on the Valve index controller being pressed down. */
 	virtual void Interact_Implementation(bool pressed);
+
+	/* Ran on an interactable when the hand has selected it as the overlappingGrabbable to grab when grab is pressed.
+	 * NOTE: Handles highlighting of interactables that are grabbable within the world. Be sure to call the super if overridden. */
 	virtual void Overlapping_Implementation(AVRHand* hand);
+
+	/* Ran on an interactable when the hand has selected it as the overlappingGrabbable to grab when grab is pressed is removed.
+	 * NOTE: Handles un-highlighting of interactables that are grabbable within the world. Be sure to call the super if overridden. */
 	virtual void EndOverlapping_Implementation(AVRHand* hand);
+
+	/* Ran on an interactable when the hand is teleported. */
 	virtual void Teleported_Implementation();
 
- 	/*  Get and set functions to allow changes from blueprint. */
+ 	/*  Get and set functions to allow changes to an interactable. */
 	virtual FHandInterfaceSettings GetInterfaceSettings_Implementation();
  	virtual void SetInterfaceSettings_Implementation(FHandInterfaceSettings newInterfaceSettings);
 };
