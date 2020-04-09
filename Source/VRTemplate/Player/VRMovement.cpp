@@ -746,7 +746,8 @@ bool AVRMovement::CreateTeleportSpline(FTransform startTransform, FVector& outLo
 	actorsToIgnore.Add(currentMovingHand->otherHand);
 
 	// Projectile trace the spline hit location and use each stage of the trace to create a spline from the shape.
-	UGameplayStatics::Blueprint_PredictProjectilePath_ByTraceChannel(GetWorld(), hit, outPathPositions, outLastTraceDestination, teleportSpline->GetComponentLocation(), teleportSpline->GetForwardVector() * teleportDistance, true, 0.0f, ECC_Visibility, false, actorsToIgnore, EDrawDebugTrace::None, 0.0f, 30.0f, 2.0f, teleportGravity);
+	// Same way unreal do it in their VRContent examples.
+	UGameplayStatics::Blueprint_PredictProjectilePath_ByTraceChannel(GetWorld(), hit, outPathPositions, outLastTraceDestination, teleportSpline->GetComponentLocation(), teleportSpline->GetForwardVector() * teleportDistance, true, 0.0f, ECC_Teleport, false, actorsToIgnore, EDrawDebugTrace::None, 0.0f, 30.0f, 2.0f, teleportGravity);
 
 	// Set the spline up from the projectile trace.
 	for (FVector splinePoint : outPathPositions)

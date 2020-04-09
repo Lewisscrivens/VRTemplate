@@ -16,8 +16,8 @@ enum class EBoardInputType : uint8
 };
 
 /* Render target board input object for casting onto the Render Target Board's mesh to allow drawing functionality. So for example this would be a pencil or a marker.
- * NOTE: Would be much better to not use the grabbable actor class and make a separate collision class so that writing on the board is easier/feels more natural. For the sake
- *       of saving time I have used the grabbable actor but its a big improvement that could be made... */
+ * NOTE: Currently only blue is supported as it is set manually in the material this could be changed but will require a more complex board material for transitioning between 
+ *       different colored markers... Didn't add this as the class is only an example of how this can be done. */
 UCLASS()
 class VRTEMPLATE_API ARenderTargetInput : public AGrabbableActor
 {

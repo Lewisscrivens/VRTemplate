@@ -12,15 +12,6 @@ class UMaterialInstanceDynamic;
 class UCanvasRenderTarget2D;
 class UMaterialInterface;
 
-/* Enum to check which marker type is being used on the board. */
-UENUM(BlueprintType)
-enum class EMarkerColor : uint8 
-{
-	Black,
-	Red,
-	Blue
-};
-
 /* A class which allows the given boardMesh to be drawn on like a piece of paper or white board from the RenderTargetInput class. */
 UCLASS()
 class VRTEMPLATE_API ARenderTargetBoard : public AActor
@@ -45,14 +36,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Board")
 	UMaterialInstanceDynamic* removalMaterialInstance;
 
-	/* The created render target set in the boardMesh's material instance for input of the marker black. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Board")
-	UCanvasRenderTarget2D* blackRenderTarget;
-
-	/* The created render target set in the boardMesh's material instance for input of the marker red. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Board")
-	UCanvasRenderTarget2D* redRenderTarget;
-
 	/* The created render target set in the boardMesh's material instance for input of the marker blue. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Board")
 	UCanvasRenderTarget2D* blueRenderTarget;
@@ -73,7 +56,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Board")
 	UMaterialInterface* removalMaterial;
 	
-	/* The size of the render targets to use. NOTE: Changes resolution of marker input/removal. */
+	/* The size of the render targets to use. NOTE: Changes resolution of marker input/removal.
+	 * NOTE: Increase the more the bigger your board mesh. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Board")
 	FVector2D renderTargetSize;
 
@@ -96,7 +80,7 @@ public:
 
 	/* Draw on the board into the inputRenderTarget. 
 	 * NOTE: Called from RenderTargetInput class when touching the board with an input. */
-	void DrawOnBoard(FVector2D uvLocation, EMarkerColor color, float size);
+	void DrawOnBoard(FVector2D uvLocation, float size);
 
 	/* Remove from the board and draw into the removalRenderTarget.
 	 * NOTE: Called from RenderTargetInput class when touching the board with a removal. */

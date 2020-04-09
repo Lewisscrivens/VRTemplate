@@ -14,13 +14,13 @@
 ARenderTargetInput::ARenderTargetInput()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.TickGroup = ETickingGroup::TG_PostUpdateWork;
 
 	// Setup class defaults.
 	inputType = EBoardInputType::input;
-	inputColor = EMarkerColor::Black;
 	boardType = "Board";
-	updateRate = 0.02f;
 	inputSize = 0.05f;
+	updateRate = 0.02f;
 	currentBoard = nullptr;
 	traceDistance = 10.0f;
 	debugTrace = false;
@@ -38,11 +38,11 @@ void ARenderTargetInput::BeginPlay()
 		return;
 	}
 
-	// Setup timer and pause it until it is needed to be ran.
+	// Setup update timer and pause it till grabbed.
 	FTimerDelegate timerDel;
 	timerDel.BindUFunction(this, "UpdateInput");
-	GetWorldTimerManager().SetTimer(inputUpdateTimer, timerDel, updateRate, true, 0.0f);
-	GetWorldTimerManager().PauseTimer(inputUpdateTimer);
+	GetWorldTimerManager().SetTimer(updateTimer, timerDel, updateRate, true, 0.0f);
+	GetWorldTimerManager().PauseTimer(updateTimer);
 }
 
 void ARenderTargetInput::Tick(float DeltaTime)
@@ -60,37 +60,36 @@ void ARenderTargetInput::UpdateInput()
 		// Calculate current end location.
 		FVector endPoint = grabbableMesh->GetComponentLocation() + (grabbableMesh->GetUpVector() * -traceDistance);
 
-		// Only draw if the input has moved enough.
-		if (!lastTraceLocation.Equals(endPoint, inputSize))
+		// Get UV location if a render target board can be found from the input trace.
+		FVector2D UVLoc;
+		if (InputTrace(UVLoc))
 		{
-			// Get UV location if a render target board can be found from the input trace.
-			FVector2D UVLoc;
-			if (InputTrace(UVLoc))
+			// If first hit draw onto the board.
+			if (firstHit)
 			{
-				// If first hit draw onto the board.
-				if (firstHit)
-				{
-					currentBoard->DrawOnBoard(UVLoc, inputColor, inputSize);
-				}
-				else
-				{
-					// Find number of times to draw between current and last to prevent jagged lines.
-					float difference = FMath::Abs((UVLoc - lastUVLocation).Size());
-					int lastIndex = (int)(difference / inputSize) * 3.0f;
-					for (int i = 1; i < lastIndex; i++)
-					{
-						float lerpingAlpha = (i * inputSize) / difference;
-						FVector2D lerpingUVLoc = FMath::Lerp(lastUVLocation, UVLoc, lerpingAlpha);
-						currentBoard->DrawOnBoard(lerpingUVLoc, inputColor, inputSize);
-					}
-				}
-
-				// Save information for next check.
-				lastUVLocation = UVLoc;
-				lastTraceLocation = endPoint;
-				firstHit = false;
-				return;
+				if (inputType == EBoardInputType::input) currentBoard->DrawOnBoard(UVLoc, inputSize);
+				else currentBoard->RemoveFromBoard(UVLoc, inputSize);
 			}
+			else
+			{
+				// Find number of times to draw between current and last to prevent jagged lines.
+				float UVDistance = FVector2D::Distance(UVLoc, lastUVLocation); 
+				float size = inputSize * FMath::Clamp((UVDistance / 0.05f), 0.2f, 1.0f);
+				int lastIndex = (int)(UVDistance / size);
+				for (int i = 1; i < lastIndex; i++)
+				{
+					float lerpingAlpha = (i * size) / UVDistance;
+					FVector2D lerpingUVLoc = FMath::Lerp(lastUVLocation, UVLoc, lerpingAlpha);
+					if (inputType == EBoardInputType::input) currentBoard->DrawOnBoard(lerpingUVLoc, inputSize);
+					else currentBoard->RemoveFromBoard(UVLoc, inputSize);
+				}
+			}
+
+			// Save information for next check.
+			lastUVLocation = UVLoc;
+			lastTraceLocation = endPoint;
+			firstHit = false;
+			return;
 		}
 	}
 
@@ -148,7 +147,7 @@ void ARenderTargetInput::GrabPressed_Implementation(AVRHand* hand)
 	AGrabbableActor::GrabPressed_Implementation(hand);
 
 	// Un-pause the input check.
-	GetWorldTimerManager().UnPauseTimer(inputUpdateTimer);
+	GetWorldTimerManager().UnPauseTimer(updateTimer);
 }
 
 void ARenderTargetInput::GrabReleased_Implementation(AVRHand* hand)
@@ -156,6 +155,6 @@ void ARenderTargetInput::GrabReleased_Implementation(AVRHand* hand)
 	AGrabbableActor::GrabReleased_Implementation(hand);
 
 	// Pause the input check. 
-	GetWorldTimerManager().PauseTimer(inputUpdateTimer);
+	GetWorldTimerManager().PauseTimer(updateTimer);
 }
 

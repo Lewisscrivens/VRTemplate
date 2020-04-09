@@ -5,6 +5,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/CanvasRenderTarget2D.h"
 #include "Kismet/KismetRenderingLibrary.h"
+#include "Engine/Canvas.h"
 
 ARenderTargetBoard::ARenderTargetBoard()
 {
@@ -30,13 +31,10 @@ void ARenderTargetBoard::BeginPlay()
 	removalMaterialInstance = UMaterialInstanceDynamic::Create(removalMaterial, this);
 
 	// Create and setup this boards render targets.
-	blackRenderTarget = UCanvasRenderTarget2D::CreateCanvasRenderTarget2D(GetWorld(), UCanvasRenderTarget2D::StaticClass(), renderTargetSize.X, renderTargetSize.Y);
-	redRenderTarget = UCanvasRenderTarget2D::CreateCanvasRenderTarget2D(GetWorld(), UCanvasRenderTarget2D::StaticClass(), renderTargetSize.X, renderTargetSize.Y);
 	blueRenderTarget = UCanvasRenderTarget2D::CreateCanvasRenderTarget2D(GetWorld(), UCanvasRenderTarget2D::StaticClass(), renderTargetSize.X, renderTargetSize.Y);
 	removalRenderTarget = UCanvasRenderTarget2D::CreateCanvasRenderTarget2D(GetWorld(), UCanvasRenderTarget2D::StaticClass(), renderTargetSize.X, renderTargetSize.Y);
-	boardMeshMaterialInst->SetTextureParameterValue("MaskBlack", blackRenderTarget);
-	boardMeshMaterialInst->SetTextureParameterValue("MaskRed", redRenderTarget);
 	boardMeshMaterialInst->SetTextureParameterValue("MaskBlue", blueRenderTarget);
+	boardMeshMaterialInst->SetTextureParameterValue("MaskRemove", removalRenderTarget);
 
 	// Set material of board mesh to the created material instance.
 	boardMesh->SetMaterial(0, boardMeshMaterialInst);
@@ -49,7 +47,7 @@ void ARenderTargetBoard::Tick(float DeltaTime)
 	//...
 }
 
-void ARenderTargetBoard::DrawOnBoard(FVector2D uvLocation, EMarkerColor color, float size)
+void ARenderTargetBoard::DrawOnBoard(FVector2D uvLocation, float size)
 {
 	// Convert to vector.
 	FVector uvVectorLoc = FVector(uvLocation.X, uvLocation.Y, 0.0f);
@@ -58,19 +56,8 @@ void ARenderTargetBoard::DrawOnBoard(FVector2D uvLocation, EMarkerColor color, f
 	inputMaterialInst->SetVectorParameterValue("DrawLocation", uvVectorLoc);
 	inputMaterialInst->SetScalarParameterValue("DrawSize", size);
 
-	// Draw onto the correct render target depending on the color.
-	switch (color)
-	{
-	case EMarkerColor::Black:
-		UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), blackRenderTarget, inputMaterialInst);
-	break;
-	case EMarkerColor::Red:
-		UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), redRenderTarget, inputMaterialInst);
-	break;
-	case EMarkerColor::Blue:
-		UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), blueRenderTarget, inputMaterialInst);
-	break;
-	}
+	// Draw onto the correct render target depending on the color. Only supports blue atm.
+	UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), blueRenderTarget, inputMaterialInst);
 }
 
 void ARenderTargetBoard::RemoveFromBoard(FVector2D uvLocation, float size)
@@ -89,8 +76,6 @@ void ARenderTargetBoard::RemoveFromBoard(FVector2D uvLocation, float size)
 void ARenderTargetBoard::ClearBoard()
 {
 	// Reset all render targets to black.
-	UKismetRenderingLibrary::ClearRenderTarget2D(GetWorld(), blackRenderTarget, FLinearColor::Black);
-	UKismetRenderingLibrary::ClearRenderTarget2D(GetWorld(), redRenderTarget, FLinearColor::Black);
 	UKismetRenderingLibrary::ClearRenderTarget2D(GetWorld(), blueRenderTarget, FLinearColor::Black);
 	UKismetRenderingLibrary::ClearRenderTarget2D(GetWorld(), removalRenderTarget, FLinearColor::Black);
 }
