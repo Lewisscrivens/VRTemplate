@@ -154,9 +154,6 @@ void AVRHand::BeginPlay()
 	{
 		widgetOverlap->OnComponentBeginOverlap.AddDynamic(this, &AVRHand::WidgetInteractorOverlapBegin);
 	}
-
-	// Set up the controller offsets for the current type of controller selected.
-	if (!devModeEnabled) SetupControllerOffset();
 }
 
 void AVRHand::SetupHand(AVRHand * oppositeHand, AVRPawn* playerRef, bool dev)
@@ -173,6 +170,9 @@ void AVRHand::SetupHand(AVRHand * oppositeHand, AVRPawn* playerRef, bool dev)
 
 	// Save the original transform of the hand for calculating offsets.
 	originalHandTransform = controller->GetComponentTransform();
+
+	// Set up the controller offsets for the current type of controller selected.
+	if (!devModeEnabled) SetupControllerOffset();
 }
 
 void AVRHand::SetControllerType(EVRController type)
