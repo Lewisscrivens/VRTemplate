@@ -26,7 +26,6 @@ void ARenderTargetBoard::BeginPlay()
 	
 	// Setup the material instances.
 	boardMeshMaterialInst = UMaterialInstanceDynamic::Create(boardMeshMaterial, this);
-	boardMesh->SetMaterial(0, boardMeshMaterial);
 	inputMaterialInst = UMaterialInstanceDynamic::Create(inputMaterial, this);
 	removalMaterialInstance = UMaterialInstanceDynamic::Create(removalMaterial, this);
 
@@ -38,6 +37,9 @@ void ARenderTargetBoard::BeginPlay()
 	boardMeshMaterialInst->SetTextureParameterValue("MaskBlack", blackRenderTarget);
 	boardMeshMaterialInst->SetTextureParameterValue("MaskRed", redRenderTarget);
 	boardMeshMaterialInst->SetTextureParameterValue("MaskBlue", blueRenderTarget);
+
+	// Set material of board mesh to the created material instance.
+	boardMesh->SetMaterial(0, boardMeshMaterialInst);
 }
 
 void ARenderTargetBoard::Tick(float DeltaTime)

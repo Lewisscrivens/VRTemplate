@@ -23,10 +23,6 @@ class VRTEMPLATE_API ARenderTargetInput : public AGrabbableActor
 
 public:
 
-	/* The trace point with X-axis facing the direction to trace for the renderTargetBoard. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Input")
-	USceneComponent* tracePoint;
-
 	/* The input type of this render target input class. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	EBoardInputType inputType;
@@ -47,7 +43,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Board")
 	float inputSize;
 
-	/* The distance to trace from the tracePoint to look for a RenderTargetBoard object. */
+	/* The distance to trace from the grabbable mesh down along the Z-Axis to look for a RenderTargetBoard object. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Board", meta = (UIMin = "0.0", ClampMin = "0.0"))
 	float traceDistance;
 

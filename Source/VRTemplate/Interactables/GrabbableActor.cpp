@@ -31,11 +31,10 @@ AGrabbableActor::AGrabbableActor()
 
 	// The grabbable mesh root component. Default Setup.
 	grabbableMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	grabbableMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	grabbableMesh->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel6);
-	grabbableMesh->SetUseCCD(true);
+	grabbableMesh->SetCollisionProfileName("Interactable");
 	grabbableMesh->SetSimulatePhysics(true);
 	grabbableMesh->SetGenerateOverlapEvents(true);
+	grabbableMesh->SetNotifyRigidBodyCollision(true);
 	grabbableMesh->ComponentTags.Add(FName("Grabbable"));
 	RootComponent = grabbableMesh;
 
