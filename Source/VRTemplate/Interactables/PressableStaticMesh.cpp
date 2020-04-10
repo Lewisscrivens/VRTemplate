@@ -120,8 +120,8 @@ void UPressableStaticMesh::UpdateButtonPosition()
 #endif
 
 	// Use kismet system library for handling the debugging for shape traces.
-	if (shapeTraceType != EButtonTraceCollision::Box) UKismetSystemLibrary::SphereTraceSingleByProfile(GetWorld(), startCurrentWorldLocation, endCurrentWorldLocation, sphereSize, "Grabbable", false, ignoredActors, drawDebug, buttonHit, true);
-	else UKismetSystemLibrary::BoxTraceSingleByProfile(GetWorld(), startCurrentWorldLocation, endCurrentWorldLocation, buttonExtent, GetComponentTransform().Rotator(), "Grabbable", false, ignoredActors, drawDebug, buttonHit, true);
+	if (shapeTraceType != EButtonTraceCollision::Box) UKismetSystemLibrary::SphereTraceSingleByProfile(GetWorld(), startCurrentWorldLocation, endCurrentWorldLocation, sphereSize, "Interactable", false, ignoredActors, drawDebug, buttonHit, true);
+	else UKismetSystemLibrary::BoxTraceSingleByProfile(GetWorld(), startCurrentWorldLocation, endCurrentWorldLocation, buttonExtent, GetComponentTransform().Rotator(), "Interactable", false, ignoredActors, drawDebug, buttonHit, true);
 
 	// If the button trace has hit anything.
 	if (buttonHit.bBlockingHit && !cannotPress)
