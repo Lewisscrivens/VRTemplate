@@ -16,7 +16,7 @@
 
 DEFINE_LOG_CATEGORY(LogVRFunctionLibrary);
 
-/* NOTE: Get current amplitude and frequency values of a curve at a specific time...
+/** NOTE: Get current amplitude and frequency values of a curve at a specific time...
 void UHapticFeedbackEffect_Curve::GetValues(const float EvalTime, FHapticFeedbackValues& Values)
 {
 	Values.Amplitude = HapticDetails.Amplitude.GetRichCurveConst()->Eval(EvalTime);

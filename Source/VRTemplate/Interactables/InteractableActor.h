@@ -7,16 +7,16 @@
 #include "Globals.h"
 #include "InteractableActor.generated.h"
 
-/* Define this actors log category. */
+/** Define this actors log category. */
 DECLARE_LOG_CATEGORY_EXTERN(LogInteractable, Log, All);
 
-/* Declare interact delegate. */
+/** Declare interact delegate. */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInteractEvent, bool, pressed);
 
-/* Declare classes used. */
+/** Declare classes used. */
 class AVRHand;
 
-/* Class with implemented interface ready for blueprint use, Needed due to the IHandsInterface class being null when called
+/** Class with implemented interface ready for blueprint use, Needed due to the IHandsInterface class being null when called
  * from a BlueprintActor with said interface implemented. */
 UCLASS()
 class VRTEMPLATE_API AInteractableActor : public AActor, public IHandsInterface
@@ -25,32 +25,32 @@ class VRTEMPLATE_API AInteractableActor : public AActor, public IHandsInterface
 
 public:
 
-	/* Enable the debugging message for printing this interactables current settings every frame. */
+	/** Enable the debugging message for printing this interactables current settings every frame. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interatable")
 	bool debugSettings;
 
-	/* The interfaces interactable settings for how to interact with VR controllers/hands. */
+	/** The interfaces interactable settings for how to interact with VR controllers/hands. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interatable")
 	FHandInterfaceSettings interactableSettings;
 
-	/* Cast to delegate when interact is pressed. */
+	/** Cast to delegate when interact is pressed. */
 	UPROPERTY(BlueprintAssignable)
 	FInteractEvent OnInteract;
 
 protected:
 
-	/* Level Start. */
+	/** Level Start. */
 	virtual void BeginPlay() override;
 
 public:
 
-	/* Constructor. */
+	/** Constructor. */
 	AInteractableActor();
 
-	/* Frame. */
+	/** Frame. */
 	virtual void Tick(float DeltaTime) override;
 
-	/* Blueprint interface functions to be override in the BP....
+	/** Blueprint interface functions to be override in the BP....
 	 * NOTE: This is needed due to the interface being C++ it doesn't work correctly in BP... */
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = Blueprint)
 	void GrabPressedBP(AVRHand* hand);
@@ -75,7 +75,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = Blueprint)
 	void TeleportedBP();
 
-	/* Implementation of the interfaces functions... */
+	/** Implementation of the interfaces functions... */
 	virtual void GrabPressed_Implementation(AVRHand* hand) override;
 	virtual void GrabReleased_Implementation(AVRHand* hand) override;
 	virtual void GrabbedWhileLocked_Implementation() override;
@@ -88,7 +88,7 @@ public:
 	virtual void EndOverlapping_Implementation(AVRHand* hand) override;
 	virtual void Teleported_Implementation() override;
 
-	/*  Get and set functions to allow changes from blueprint. */
+	/**  Get and set functions to allow changes from blueprint. */
 	virtual FHandInterfaceSettings GetInterfaceSettings_Implementation() override;
 	virtual void SetInterfaceSettings_Implementation(FHandInterfaceSettings newInterfaceSettings) override;
 };

@@ -6,20 +6,20 @@
 #include "Globals.h"
 #include "PressableStaticMesh.generated.h"
 
-/* Define this actors log category. */
+/** Define this actors log category. */
 DECLARE_LOG_CATEGORY_EXTERN(LogPressable, Log, All);
 
-/* Declare classes used. */
+/** Declare classes used. */
 class USoundBase;
 class UHapticFeedbackEffect_Base;
 class USoundAttenuation;
 
-/* Button delegates. */
+/** Button delegates. */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPressed, bool, on);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPressedOn, FString, pressableName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPressedRefference, UPressableStaticMesh*, pressable);
 
-/* Different button modes. */
+/** Different button modes. */
 UENUM(BlueprintType)
 enum class EButtonMode : uint8
 {
@@ -29,7 +29,7 @@ enum class EButtonMode : uint8
 	SingleUse UMETA(DisplayName = "SingleUse", ToolTip = "Button will keep on position after pressed once."),
 };
 
-/* Different collision shape options, had to make custom enum as UE4's enums are not blueprint types. */
+/** Different collision shape options, had to make custom enum as UE4's enums are not blueprint types. */
 UENUM(BlueprintType)
 enum class EButtonTraceCollision : uint8
 {
@@ -37,8 +37,8 @@ enum class EButtonTraceCollision : uint8
 	Box UMETA(DisplayName = "Box", ToolTip = "Trace for button position will be done using a box that encapsulates this button."),
 };
 
-/* To adjust the buttons update distance make the intractable sphere collider larger. NOTE: Created a blueprint class from this class in editor for use in blueprint based actors. */
-/* Also this button updates every frame, to improve this only update this button when overlapping with a shape collider in the actor blueprint/class. */
+/** To adjust the buttons update distance make the intractable sphere collider larger. NOTE: Created a blueprint class from this class in editor for use in blueprint based actors. */
+/** Also this button updates every frame, to improve this only update this button when overlapping with a shape collider in the actor blueprint/class. */
 UCLASS(ClassGroup = (Custom), Blueprintable, BlueprintType, PerObjectConfig, EditInlineNew)
 class VRTEMPLATE_API UPressableStaticMesh : public UStaticMeshComponent
 {
@@ -49,75 +49,75 @@ public:
 	// Sets default values for this component's properties
 	UPressableStaticMesh();
 
-	/* Current Button mode. */
+	/** Current Button mode. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button")
 	EButtonMode buttonMode;
 
-	/* Button trace shape. */
+	/** Button trace shape. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button")
 	EButtonTraceCollision shapeTraceType;
 
-	/* Haptic effect to play when the button state is changed. */
+	/** Haptic effect to play when the button state is changed. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button")
 	UHapticFeedbackEffect_Base* hapticEffect;
 
-	/* Sound to play when the button is switched on or pressed down. */
+	/** Sound to play when the button is switched on or pressed down. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button")
 	USoundBase* buttonPressed;
 
-	/* Sound to play when the button returns up to the unpressed state. */
+	/** Sound to play when the button returns up to the unpressed state. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button")
 	USoundBase* buttonReleased;
 
-	/* Ignored actors. */
+	/** Ignored actors. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button")
 	TArray<AActor*> ignoredActors;
 
-	/* Offset of the buttons trace overall if the origin is incorrect. Relative offset. */
+	/** Offset of the buttons trace overall if the origin is incorrect. Relative offset. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button")
 	FVector buttonOffset;
 
-	/* Travel distance. Note: Travel axis is the relative z-axis for this component. */
+	/** Travel distance. Note: Travel axis is the relative z-axis for this component. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button", meta = (ClampMin = "0.0", UIMin = "0"))
 	float travelDistance;
 
-	/* The distance pressed that should be classed as the button being on. NOTE: 1 would be the end position and 0 would be the start. 0.5 would be half way... */
+	/** The distance pressed that should be classed as the button being on. NOTE: 1 would be the end position and 0 would be the start. 0.5 would be half way... */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button", meta = (ClampMin = "0.0", UIMin = "0", ClampMax = "1.0", UIMax = "1"))
 	float onPercentage;
 
-	/* Time taken to interpolate button position back to the current state. */
+	/** Time taken to interpolate button position back to the current state. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button", meta = (ClampMin = "0.0", UIMin = "0"))
 	float interpolationSpeed;
 
-	/* Artificial press speed for the pressButton function. */
+	/** Artificial press speed for the pressButton function. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button", meta = (ClampMin = "0.0", UIMin = "0"))
 	float pressSpeed;
 
-	/* Use haptic feedback on this button. */
+	/** Use haptic feedback on this button. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button")
 	bool hapticFeedbackEnabled;
 
-	/* Is the button currently on. */
+	/** Is the button currently on. */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Button|CurrentValues")
 	bool on;
 
-	/* Locked in place. NOTE: Use reset function to reset the button to default. */
+	/** Locked in place. NOTE: Use reset function to reset the button to default. */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Button|CurrentValues")
 	bool locked;
 
-	/* Prevents the button on events from working if they temporarily need to be disabled. */
+	/** Prevents the button on events from working if they temporarily need to be disabled. */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Button|CurrentValues")
 	bool cannotPress;
 
-	/* Boolean to control when to update button position. Controlled from owning actor. */
+	/** Boolean to control when to update button position. Controlled from owning actor. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button|CurrentValues")
 	bool buttonIsUpdating;
 
-	/* Show any debug information. */
+	/** Show any debug information. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Button")
 	bool debug;
 
-	/* The sound attenuation for the button audio. */
+	/** The sound attenuation for the button audio. */
 	UPROPERTY(BlueprintReadOnly, Category = "Button")
 	USoundAttenuation* soundAttenuation;
 
@@ -125,79 +125,79 @@ public:
 	//	 Button Delegates   //
 	//////////////////////////
 
-	/* Button has been pressed down or released. */
+	/** Button has been pressed down or released. */
 	UPROPERTY(BlueprintAssignable)
 	FPressed OnPressed;
 
-	/* Button has been pressed down. */
+	/** Button has been pressed down. */
 	UPROPERTY(BlueprintAssignable)
 	FPressedOn OnPressedOn;
 
-	/* Button has been pressed or released. NOTE: Passes through the pressable that has been pressed/released. */
+	/** Button has been pressed or released. NOTE: Passes through the pressable that has been pressed/released. */
 	UPROPERTY(BlueprintAssignable)
 	FPressedRefference onPressedReff;
 
 private:
 
-	FHitResult buttonHit; /* Current frames hit result. */
-	FTransform startTransform; /* Storage for the start and end of the button. */
-	FTransform startRelativeTransform; /* Store start transform for the location and for transforming offsets. */
+	FHitResult buttonHit; /** Current frames hit result. */
+	FTransform startTransform; /** Storage for the start and end of the button. */
+	FTransform startRelativeTransform; /** Store start transform for the location and for transforming offsets. */
 	FVector bounds;
-	FVector lerpRelativeLocation; /* Current position to lerp back two when there is no interaction. */
-	FVector endPositionRel, startPositionRel, onPositionRel; /* Stored relative offsets for on and end positions. */
-	FVector endTraceToUse; /* Relative position pointer to the current end trace. NOTE: Only used in the keep position mode and single use mode. */
-	FVector buttonExtent;/* Saved extent of the button. (Takes scale into account) */
-	float sphereSize; /* Generated from the VR function library using bounds check. */
-	float onDistance; /* Distance to travel until classed as on. */
-	float oldInteractionSpeed; /* Old Interaction speed. */
-	float soundIntensity; /* Sound intensity. */
-	float soundPitch; /* Sound pitch. */
-	bool keepingPos; /* Should keep button position for keepPos button mode. */
-	bool interpToPosition; /* Should interp into position. Checked in tick/timer. */
-	bool alreadyToggled; /* Has the buttons on or off value been toggled... */
-	bool resetInterpolationValues; /* Should reset interpolation values this frame? */
+	FVector lerpRelativeLocation; /** Current position to lerp back two when there is no interaction. */
+	FVector endPositionRel, startPositionRel, onPositionRel; /** Stored relative offsets for on and end positions. */
+	FVector endTraceToUse; /** Relative position pointer to the current end trace. NOTE: Only used in the keep position mode and single use mode. */
+	FVector buttonExtent;/** Saved extent of the button. (Takes scale into account) */
+	float sphereSize; /** Generated from the VR function library using bounds check. */
+	float onDistance; /** Distance to travel until classed as on. */
+	float oldInteractionSpeed; /** Old Interaction speed. */
+	float soundIntensity; /** Sound intensity. */
+	float soundPitch; /** Sound pitch. */
+	bool keepingPos; /** Should keep button position for keepPos button mode. */
+	bool interpToPosition; /** Should interp into position. Checked in tick/timer. */
+	bool alreadyToggled; /** Has the buttons on or off value been toggled... */
+	bool resetInterpolationValues; /** Should reset interpolation values this frame? */
 	bool forcePressed, turnOn;
 
 protected:
 	
-	/* Level start. */
+	/** Level start. */
 	virtual void BeginPlay() override;
 
-	/* Remove the buttonOffset from a relative vector.
+	/** Remove the buttonOffset from a relative vector.
 	 * @Param relativeVector, The relative vector to remove the button offset from. */
 	FVector RemoveRelativeOffset(FVector relativeVector);
 
 public:
 	
-	/* Frame. */
+	/** Frame. */
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
 
-	/* Ran when hand is overlapping with interaction sphere. NOTE: needs adding manually. */
+	/** Ran when hand is overlapping with interaction sphere. NOTE: needs adding manually. */
 	void UpdateButtonPosition();
 
-	/* Used to run functions for rumbling the hand, sound effects etc. for when the on value is changed. */
+	/** Used to run functions for rumbling the hand, sound effects etc. for when the on value is changed. */
 	void UpdateButton(bool isOn);
 
-	/* Function to lerp smoothly between different relative locations. */
+	/** Function to lerp smoothly between different relative locations. */
 	void InterpButtonPosition(float DeltaTime);
 
-	/* Press this button smoothly. */
+	/** Press this button smoothly. */
 	UFUNCTION(BlueprintCallable, Category = "Button")
 	void PressButton();
 
-	/* Release this button smoothly. */
+	/** Release this button smoothly. */
 	UFUNCTION(BlueprintCallable, Category = "Button")
 	void ReleaseButton();
 
-	/* Reset the button back to default. */
+	/** Reset the button back to default. */
 	UFUNCTION(BlueprintCallable, Category = "Button")
 	void ResetButton();
 
-	/* Gets the correct parent transform for this component. */
+	/** Gets the correct parent transform for this component. */
 	UFUNCTION(BlueprintCallable, Category = "Button")
 	FTransform GetParentTransform();
 
-	/* Update this pressable components audio settings for pitch and sound intensity. */
+	/** Update this pressable components audio settings for pitch and sound intensity. */
 	UFUNCTION(BlueprintCallable, Category = "Button")
 	void UpdateAudio(USoundBase* downSound, USoundBase* upSound, float intesity = 1.0f, float pitch = 1.0f, USoundAttenuation* attenuation = nullptr);
 };

@@ -32,9 +32,7 @@ void ARenderTargetBoard::BeginPlay()
 
 	// Create and setup this boards render targets.
 	blueRenderTarget = UCanvasRenderTarget2D::CreateCanvasRenderTarget2D(GetWorld(), UCanvasRenderTarget2D::StaticClass(), renderTargetSize.X, renderTargetSize.Y);
-	removalRenderTarget = UCanvasRenderTarget2D::CreateCanvasRenderTarget2D(GetWorld(), UCanvasRenderTarget2D::StaticClass(), renderTargetSize.X, renderTargetSize.Y);
 	boardMeshMaterialInst->SetTextureParameterValue("MaskBlue", blueRenderTarget);
-	boardMeshMaterialInst->SetTextureParameterValue("MaskRemove", removalRenderTarget);
 
 	// Set material of board mesh to the created material instance.
 	boardMesh->SetMaterial(0, boardMeshMaterialInst);
@@ -69,14 +67,13 @@ void ARenderTargetBoard::RemoveFromBoard(FVector2D uvLocation, float size)
 	removalMaterialInstance->SetVectorParameterValue("DrawLocation", uvVectorLoc);
 	removalMaterialInstance->SetScalarParameterValue("DrawSize", size);
 
-	// Draw onto the removal render target.
-	UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), removalRenderTarget, removalMaterialInstance);
+	// Draw onto the blue render target with the removal material.
+	UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetWorld(), blueRenderTarget, removalMaterialInstance);
 }
 
 void ARenderTargetBoard::ClearBoard()
 {
 	// Reset all render targets to black.
 	UKismetRenderingLibrary::ClearRenderTarget2D(GetWorld(), blueRenderTarget, FLinearColor::Black);
-	UKismetRenderingLibrary::ClearRenderTarget2D(GetWorld(), removalRenderTarget, FLinearColor::Black);
 }
 

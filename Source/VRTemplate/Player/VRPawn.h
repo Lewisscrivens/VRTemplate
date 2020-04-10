@@ -9,10 +9,10 @@
 #include "Globals.h"
 #include "VRPawn.generated.h"
 
-/* Declare log type for the player pawn class. */
+/** Declare log type for the player pawn class. */
 DECLARE_LOG_CATEGORY_EXTERN(LogVRPawn, Log, All);
 
-/* Declare classes used. */
+/** Declare classes used. */
 class UFloatingPawnMovement;
 class UCapsuleComponent;
 class USceneComponent;
@@ -25,17 +25,17 @@ class UInputComponent;
 class UMaterial;
 class UEffectsContainer;
 
-/* Post update ticking function integration. 
+/** Post update ticking function integration. 
  * NOTEL: Important for checking the tracking state of the HMD and hands. */
 USTRUCT()
 struct FPostUpdateTick : public FActorTickFunction
 {
 	GENERATED_BODY()
 
-	/* Target actor. */
+	/** Target actor. */
 	class AVRPawn* Target;
 
-	/* Declaration of the new ticking function for this class. */
+	/** Declaration of the new ticking function for this class. */
 	virtual void ExecuteTick(float DeltaTime, enum ELevelTick TickType, ENamedThreads::Type CurrentThread, const FGraphEventRef& MyCompletionGraphEvent) override;
 };
 
@@ -45,7 +45,7 @@ struct TStructOpsTypeTraits<FPostUpdateTick> : public TStructOpsTypeTraitsBase2<
 	enum { WithCopy = false };
 };
 
-/* VR Pawn system that connected the VRMovement component and VRHands, manages input across the hands and the movement class. */
+/** VR Pawn system that connected the VRMovement component and VRHands, manages input across the hands and the movement class. */
 UCLASS()
 class VRTEMPLATE_API AVRPawn : public APawn
 {
@@ -53,95 +53,95 @@ class VRTEMPLATE_API AVRPawn : public APawn
 
 public:
 
-	/* Movement component for the developer mode and certain types of vr movement. */
+	/** Movement component for the developer mode and certain types of vr movement. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Pawn")
 	UFloatingPawnMovement* floatingMovement;
 
-	/* Movement component for the developer mode and certain types of vr movement. */
+	/** Movement component for the developer mode and certain types of vr movement. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Pawn")
 	UCapsuleComponent* movementCapsule;
 
-	/* Location of the floor relative to the headset. */
+	/** Location of the floor relative to the headset. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Pawn")
 	USceneComponent* scene;
 
-	/* Player camera to map HMD location, rotation etc. */
+	/** Player camera to map HMD location, rotation etc. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Pawn")
 	UCameraComponent* camera;
 
-	/* Head colliders. */
+	/** Head colliders. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Pawn")
 	USphereComponent* headCollider;
 	
-	/* Vignette for movement peripheral vision damping. Helps with motion sickness, enable this in the movement component VR. */
+	/** Vignette for movement peripheral vision damping. Helps with motion sickness, enable this in the movement component VR. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Pawn")
 	UStaticMeshComponent* vignette;
 
-	/* Left hand class pointer. */
+	/** Left hand class pointer. */
 	UPROPERTY(BlueprintReadOnly, Category = "Pawn")
 	AVRHand* leftHand;
 
-	/* Right hand class pointer. */
+	/** Right hand class pointer. */
 	UPROPERTY(BlueprintReadOnly, Category = "Pawn")
 	AVRHand* rightHand;
 
-	/* Blueprint template class to spawn the movement component from. */
+	/** Blueprint template class to spawn the movement component from. */
 	UPROPERTY(EditDefaultsOnly, Category = "Pawn")
 	TSubclassOf<AVRMovement> movementClass;
 
-	/* The template class/BP for the left hand. */
+	/** The template class/BP for the left hand. */
 	UPROPERTY(EditDefaultsOnly, Category = "Pawn")
 	TSubclassOf<AVRHand> leftHandClass;
 
-	/* The template class/BP for the right hand. */
+	/** The template class/BP for the right hand. */
 	UPROPERTY(EditDefaultsOnly, Category = "Pawn")
 	TSubclassOf<AVRHand> rightHandClass;
 
-	/* Container component to add feedback and audio references that are obtainable by name in code. */
+	/** Container component to add feedback and audio references that are obtainable by name in code. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pawn")
 	UEffectsContainer* pawnEffects;
 
-	/* Intensity of the haptic effects for this pawns hand classes. */
+	/** Intensity of the haptic effects for this pawns hand classes. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pawn")
 	float hapticIntensity;
 
-	/* Enable any debug messages for this class. */
+	/** Enable any debug messages for this class. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pawn")
 	bool debug;
 
-	/* Component that holds all the movement functionality. Created and spawned from template (vrMovementTemplate) in begin play. */
+	/** Component that holds all the movement functionality. Created and spawned from template (vrMovementTemplate) in begin play. */
 	UPROPERTY(BlueprintReadWrite, Category = "Pawn")
 	AVRMovement* movement;
 
-	FPostUpdateTick postTick; /* Post ticking declaration. */
-	TArray<TEnumAsByte<EObjectTypeQuery>> physicsColliders; /* Collision array for any physics objects. */
-	TArray<TEnumAsByte<EObjectTypeQuery>> constrainedColliders; /* Collision array for any physics constrained objects. */
-	TArray<AActor*> actorsToIgnore; /* Ignored actors for this class. */
+	FPostUpdateTick postTick; /** Post ticking declaration. */
+	TArray<TEnumAsByte<EObjectTypeQuery>> physicsColliders; /** Collision array for any physics objects. */
+	TArray<TEnumAsByte<EObjectTypeQuery>> constrainedColliders; /** Collision array for any physics constrained objects. */
+	TArray<AActor*> actorsToIgnore; /** Ignored actors for this class. */
 
-	bool foundHMD; /* Found and tracking the HMD. */
-	bool tracked; /* Has the headset ever been tracked. Used to move the player to the start location on begin play and first tracked event for the HMD. */
-	bool devModeActive; /* Local bool to check if dev mode is enabled. */
-	bool movementLocked; /* Can the player initiate movement. */
+	bool foundHMD; /** Found and tracking the HMD. */
+	bool tracked; /** Has the headset ever been tracked. Used to move the player to the start location on begin play and first tracked event for the HMD. */
+	bool devModeActive; /** Local bool to check if dev mode is enabled. */
+	bool movementLocked; /** Can the player initiate movement. */
 
 private:
 
-	bool collisionEnabled; /* This classes components are blocking physics simulated components. */
-	FTimerHandle headColDelay; /* Timer handle for the collision delay when the collision will be re-enabled on the head Collider. Also some timer handles for the hands. */
-	FXRDeviceId hmdDevice; /* Device ID for the current HMD device that is being used. */
-	AVRHand* movingHand; /* The hand that is currently initiating movement for the VRPawn. */
+	bool collisionEnabled; /** This classes components are blocking physics simulated components. */
+	FTimerHandle headColDelay; /** Timer handle for the collision delay when the collision will be re-enabled on the head Collider. Also some timer handles for the hands. */
+	FXRDeviceId hmdDevice; /** Device ID for the current HMD device that is being used. */
+	AVRHand* movingHand; /** The hand that is currently initiating movement for the VRPawn. */
 
 protected:
 
-	/* Ran before begin play. */
+	/** Ran before begin play. */
 	virtual void PostInitializeComponents() override;
 
-	/* Level start. */
+	/** Level start. */
 	virtual void BeginPlay() override;
 
-	/* Setup pawn input. */
+	/** Setup pawn input. */
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-	/* Disable/Enable collisions on the whole pawn including hands individually from each other based on current tracking status....
+	/** Disable/Enable collisions on the whole pawn including hands individually from each other based on current tracking status....
 	 * NOTE: When this is not enabled, when the device loses tracking and repositions itself when found again the sweep will cause physic
 	 *		 actors in the scene to be affected by the force of movement... 
 	 * NOTE: Could also use SetWorldLocation/Rotation no physics functions but I have no control over the object being spawned and positioned
@@ -150,51 +150,51 @@ protected:
 
 public:
 
-	/* Constructor. */
+	/** Constructor. */
 	AVRPawn();
 
-	/* Frame. */
+	/** Frame. */
 	virtual void Tick(float DeltaTime) override;
 
-	/* Late Frame. */
+	/** Late Frame. */
 	void PostUpdateTick(float DeltaTime);
 
-	/* Teleported function to handle any events on teleport. */
+	/** Teleported function to handle any events on teleport. */
 	void Teleported();
 
-	/* Move/Set new world location and rotation of where the player is stood and facing.
+	/** Move/Set new world location and rotation of where the player is stood and facing.
 	 * @Param newLocation, The new location in world-space to teleport the player to.
 	 * @Param newRotation, The new rotation in world-space to teleport the player facing. */
 	UFUNCTION(BlueprintCallable, Category = "Pawn")
 	void MovePlayerWithRotation(FVector newLocation, FRotator newFacingRotation);
 
-	/* Move/Set new world location of where the player is stood.
+	/** Move/Set new world location of where the player is stood.
 	 * @Param newLocation, The new location in world-space to teleport the player to. */
 	UFUNCTION(BlueprintCallable, Category = "Pawn")
 	void MovePlayer(FVector newLocation);
 
-	/* @Return collisionEnabled. */
+	/** @Return collisionEnabled. */
 	UFUNCTION(BlueprintCallable, Category = "Pawn|Collision")
 	bool GetCollisionEnabled();
 
-	/* Used to quickly activate/deactivate all collision on the player. */
+	/** Used to quickly activate/deactivate all collision on the player. */
 	UFUNCTION(BlueprintCallable, Category = "Pawn|Collision")
 	void ActivateAllCollision(bool enable);
 
-	/* Used to activate/deactivate all collision in the pawn class. */
+	/** Used to activate/deactivate all collision in the pawn class. */
 	UFUNCTION(BlueprintCallable, Category = "Pawn|Collision")
 	void ActivateCollision(bool enable);
 
-	/* Looping function every 0.1 seconds checking if the head Collider is currently overlapping physics etc. If not re-enable collision, until then loop and check. */
+	/** Looping function every 0.1 seconds checking if the head Collider is currently overlapping physics etc. If not re-enable collision, until then loop and check. */
 	UFUNCTION(Category = "Pawn|Collision")
 	void CollisionDelay();
 
-	/* Get the effects container from the pawn. So hands and other interactables can obtain default effects for rumbling or audio feedback. */
+	/** Get the effects container from the pawn. So hands and other interactables can obtain default effects for rumbling or audio feedback. */
 	UFUNCTION(BlueprintCallable, Category = "Pawn|Collision")
 	UEffectsContainer* GetPawnEffects();
 
 	/////////////////////////////////////////////////////
-	/*					Input events.                  */
+	/**					Input events.                  */
 	/////////////////////////////////////////////////////
 
 	template<bool val> void GrabLeft() { GrabLeft(val); }

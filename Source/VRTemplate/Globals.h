@@ -82,7 +82,7 @@ class UPhysicalMaterial;
 class USoundBase;
 class UMaterialInterface;
 
-/* Global class for defining macro's and any other definitions used across the code for this project... */
+/** Global class for defining macro's and any other definitions used across the code for this project... */
 UCLASS()
 class VRTEMPLATE_API UGlobals : public UObject
 {
@@ -92,19 +92,19 @@ public:
 
 	// CONSTRUCTOR ONLY // 
 
-	/* Get a material interface from a destination. NOTE: Use material definitions in globals.h
+	/** Get a material interface from a destination. NOTE: Use material definitions in globals.h
 	 * @Param materialDestination, String of project file destination.*/
 	static UMaterialInterface* GetMaterial(FString materialDestination);
 
-	/* Get a physics material reference from the file destination in current project.
+	/** Get a physics material reference from the file destination in current project.
 	 * @Param materialDestination, String of project file destination.*/
 	static UPhysicalMaterial* GetPhysicalMaterial(FString materialDestination);
 
-	/* Get a haptic feedback effect from a destination. NOTE: Use feedback definitions in VRHand.h
+	/** Get a haptic feedback effect from a destination. NOTE: Use feedback definitions in VRHand.h
 	 * @Param feedbackDestination, String of project file destination.*/
 	static UHapticFeedbackEffect_Base* GetFeedback(FString feedbackDestination);
 
-	/* Get a sound from a destination.
+	/** Get a sound from a destination.
 	 * @Param soundDestination, String of project file destination.*/
 	static USoundBase* GetSound(FString soundDestination);
 };
