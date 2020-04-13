@@ -27,10 +27,6 @@ class VRTEMPLATE_API UGrabbableSkelMesh : public USkeletalMeshComponent, public 
 
 public:
 
-	/** Snapped animation to play. When snapped into a snappable component. */
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Grabbable")
-	UAnimationAsset* snappedAnimation;
-
 	/** Storage value of the player controller. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Grabbable")
 	AVRHand* handRef;
@@ -43,10 +39,6 @@ public:
 	 * NOTE: If two handed grab mode is enabled this will only work for the first hand to grab this component. Second hand will grab the closest bone. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grabbable")
 	FName boneToGrab;
-
-	/** Storage of the bone to snap this component from, when overlapping with a snappable actor. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grabbable")
-	FName boneToSnap;
 
 	/** Should the physics joint when created in physics handle modes, be placed at the center of the mesh or at the grabbing controller position. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grabbable")
@@ -111,6 +103,10 @@ public:
 	/** Stored collision haptic feedback pointer. */
 	UPROPERTY(BlueprintReadOnly, Category = "Grabbable")
 	UHapticFeedbackEffect_Base* collisionFeedback;
+
+	/** Stored snapping actor so it can be ignored if overlapping to snapping actors at once. */
+	UPROPERTY(BlueprintReadOnly, Category = "Grabbable")
+	class ASnappingActor* hasSnappingActor;
 
 	//////////////////////////
 	//	  Grab delegates    //

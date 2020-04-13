@@ -5,7 +5,6 @@
 #include "Player/VRPawn.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "Components/SkeletalMeshComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Components/BoxComponent.h"
@@ -182,17 +181,13 @@ void ASlidableActor::ShowConstraintBounds()
 	if (debug)
 	{
 		FBox currBounds;
-		if (UStaticMeshComponent* isStaticMesh = Cast<UStaticMeshComponent>(slidingMesh))
+		if (slidingMesh->GetStaticMesh()) currBounds = slidingMesh->GetStaticMesh()->GetBoundingBox();
+		else
 		{
-			if (isStaticMesh->GetStaticMesh()) currBounds = isStaticMesh->GetStaticMesh()->GetBoundingBox();
-			else
-			{
-				UE_LOG(LogSlidableActor, Warning, TEXT("The Slidable Actor %s, cannot find a static mesh set. Destroying this object..."), *GetName());
-				Destroy(); 
-				return;
-			}
+			UE_LOG(LogSlidableActor, Warning, TEXT("The Slidable Actor %s, cannot find a static mesh set. Destroying this object..."), *GetName());
+			Destroy();
+			return;
 		}
-		else if (USkeletalMeshComponent* isSkelMesh = Cast<USkeletalMeshComponent>(slidingMesh)) currBounds = isSkelMesh->GetBodyInstance(boneToGrab)->GetBodyBounds();
 		FVector meshExtent = currBounds.GetExtent() * slidingMesh->GetComponentScale();
 		FVector extent = (currentSliderLimit / 2) + meshExtent;
 		FVector debugLocation = pivot->GetComponentTransform().TransformPositionNoScale(-refferenceOffset);

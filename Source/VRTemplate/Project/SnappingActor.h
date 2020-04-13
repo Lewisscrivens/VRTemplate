@@ -47,14 +47,6 @@ enum class EInterpMode : uint8
 	InterpolateOverlapping, /** Interpolate the overlapping object to the center of the snapping component with any offset. */
 };
 
-/** Enum for differentiating between different preview mesh setups. */
-UENUM(BlueprintType)
-enum class EPreviewMeshSetup : uint8
-{
-	GrabbableActor,
-	GrabbableSkelMesh,
-};
-
 /** Actor with a Box component that will snap any grabbable that overlaps into its center position + the location and rotation 
  * offset applied to the instance of this class. */
 UCLASS()
@@ -114,7 +106,7 @@ public:
 
 	/** This snappable snapping tag which will be checked for overlapping grabbables or grabbable skeletal components. 
 	 * NOTE: If NAME_None then every grabbable and grabbable skeletal mesh component will snap to this snapping actor.
-	 * NOTE: For grabbableActor add tag to actor, for grabbableSkelMesh add tag to the component.*/
+	 * NOTE: For grabbableActor add tag to actor. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Snappable")
 	FName snappingTag;
 
@@ -129,10 +121,6 @@ public:
 	/** Grabbable actor that is currently overlapping with this component. */
 	UPROPERTY(BlueprintReadOnly, Category = "Snappable")
 	AGrabbableActor* overlappingGrabbable;
-
-	/** Grabbable Skeletal Mesh Component that is currently overlapping this component. */
-	UPROPERTY(BlueprintReadOnly, Category = "Snappable")
-	UGrabbableSkelMesh* overlappingGrabbableSkel;
 
 	/** Pointer to a physics handle component used in the physics modes for snapping. */
 	UPROPERTY(BlueprintReadOnly, Category = "Snappable")
@@ -156,7 +144,6 @@ public:
 
 private:
 	 
-	EPreviewMeshSetup compSetup; /** What component type to preview. NOTE: Less expensive than casting multiple times. */
 	EInterpMode interpMode; /** The current interpolation mode. */
 	FVector originalIntertia; /** Original inertia scale for bone grabbed in physics snap mode. */
 	FVector lerpLocation;/** Current lerping location. */
@@ -164,7 +151,6 @@ private:
 	FTransform interpStartTransform;/** The starting location and rotation of the lerp. */	
 	float interpolationStartTime;/** The starting game time of the lerp. */
 	bool componentSnapped; /** Is there a snapped component? */
-	bool updateAnim; /** Should update animation of the skeletal mesh that is being snapped to this actor. */
 
 public:
 
@@ -224,17 +210,15 @@ protected:
 	void Interpolate(float deltaTime);
 
 	/** Spawn a copy of the rootComponent and its children and set this as the preview mesh and make sure the material is set to previewMaterial. 
-	 * @Param comp, The root component of the previewComponent/mesh. 
-	 * @Param setupType, Enum to differentiate skeletal mesh setup from static mesh. */
-	bool SetupPreviewMesh(UPrimitiveComponent* comp, EPreviewMeshSetup setupType);
+	 * @Param comp, The root component of the previewComponent/mesh. */
+	bool SetupPreviewMesh(UPrimitiveComponent* comp);
 
 	/** Reset the preview mesh back to null and destroy any duplicated children preview meshes. */
 	void ResetPreviewMesh();
 
 	/** Create a physics handle and grab the compToAttach.
-	 * @Param compToAttatch, The component to attach to the handles joint. 
-	 * @Param setupType, The type of setup to use to grab the component. */
-	void CreateAndAttatchPhysicsHandle(UPrimitiveComponent* compToAttatch, EPreviewMeshSetup setupType);
+	 * @Param compToAttatch, The component to attach to the handles joint. */
+	void CreateAndAttatchPhysicsHandle(UPrimitiveComponent* compToAttatch);
 
 	/** Function to destroy the physics handle joint attatched to any given component. */
 	void DestroyPhysicsHandle();

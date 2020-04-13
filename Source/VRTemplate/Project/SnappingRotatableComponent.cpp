@@ -24,11 +24,13 @@ USnappingRotatableComponent::USnappingRotatableComponent()
 	// Setup default variables.
 	lockOnLimit = true;
 	rotatingLimit = 90.0f;
+	returningDistance = 15.0f;
 	limitReachedSound = nullptr;
 	limitReachedHaptics = nullptr;
 	handRegrab = nullptr;
 	snappedGrabbable = nullptr;
 	rotatableMesh = nullptr;
+	limitReached = false;
 }
 
 void USnappingRotatableComponent::BeginPlay()
@@ -56,8 +58,25 @@ void USnappingRotatableComponent::UpdateRotatableState()
 	// If something is snapped continue.
 	if (snappedGrabbable && snappedGrabbable->IsValidLowLevel())
 	{
+		// Call delegates for entering and exiting the limit...
+		if (rotatableMesh->cumulativeAngle == rotatingLimit)
+		{
+			// Only call the first time it is reached.
+			if (!limitReached)
+			{
+				limitReachedDel.Broadcast();
+				limitReached = true;
+			}
+		}
+		// Otherwise if it was reached but exited call the exited delegate.
+		else if (limitReached)
+		{
+			limitExitedDel.Broadcast();
+			limitReached = false;
+		}
+
 		// If the rotatable mesh is grabbed and is moving away disconnect the grabbable. NOTE: Add this back in if u only want to disconnect if no rotation has happened. "&& rotatableMesh->cumulativeAngle == 0.0f."
-		if (rotatableMesh->handRef && rotatableMesh->interactableSettings.handDistance > 4.0f) 
+		if (rotatableMesh->handRef && rotatableMesh->interactableSettings.handDistance > returningDistance)
 		{
 			// Release the rotatable from the hand.
 			AGrabbableActor* grabbable = snappedGrabbable;
@@ -77,6 +96,7 @@ void USnappingRotatableComponent::UpdateRotatableState()
 			// Disconnect and Set world location of overlapping grabbable then grab it.
 			snappedGrabbable->grabbableMesh->SetWorldLocationAndRotation(grabbedLocation, grabbedRotation, false, nullptr, ETeleportType::TeleportPhysics);
 			handRegrab->ForceGrab(grabbable);
+			snappedGrabbable->grabbableMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 			// Snapped grabbable is now disconnected.
 			snappedGrabbable = nullptr;
@@ -110,7 +130,7 @@ void USnappingRotatableComponent::OverlapBegin(UPrimitiveComponent* OverlappedCo
 			// Bind to the snappedGrabbables grabbed function so it can be canceled and redirected to grab the slidngMesh.
 			if (!grabbableActor->OnMeshGrabbed.Contains(this, "OnGrabbableGrabbed")) grabbableActor->OnMeshGrabbed.AddDynamic(this, &USnappingRotatableComponent::OnGrabbableGrabbed);
 
-			// Grab the sliding static mesh comp.
+			// Grab the rotatable static mesh comp.
 			overlappingHand->ForceGrab(rotatableMesh);
 			snappedGrabbable = grabbableActor;
 

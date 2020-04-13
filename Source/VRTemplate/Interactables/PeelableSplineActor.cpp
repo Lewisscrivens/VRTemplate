@@ -8,13 +8,16 @@
 #include "SceneManagement.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/CapsuleComponent.h"
+#include "Engine/StaticMesh.h"
+#include "PhysicsEngine/PhysicsConstraintComponent.h"
 
 DEFINE_LOG_CATEGORY(LogPeelable);
 
 APeelableSplineActor::APeelableSplineActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	PrimaryActorTick.TickGroup = ETickingGroup::TG_PrePhysics;
+	PrimaryActorTick.TickGroup = TG_PostUpdateWork;
 
 	// Construct this actors sub-components.
 	root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
@@ -43,6 +46,7 @@ APeelableSplineActor::APeelableSplineActor()
 	pointEndsDown = true;
 	regenerateSpline = false;
 	splineMeshDistance = 5.0f;
+	defaultAngularLimit = 45.0f;
 	tapeSections = 11;
 	numOfOverlaps = 0;
 	debug = false;
@@ -261,8 +265,7 @@ void APeelableSplineActor::OnConstruction(const FTransform& Transform)
 	USplineMeshComponent* splineStartMeshReff = NewObject<USplineMeshComponent>(this, "SplineStart");
 	splineStartMeshReff->SetMobility(EComponentMobility::Movable);
 	splineStartMeshReff->AttachToComponent(peelableSpline, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-	splineStartMeshReff->SetCollisionProfileName("BlockAll");
-	splineStartMeshReff->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	splineStartMeshReff->SetCollisionProfileName("InteractableOverlap");
 	splineStartMeshReff->SetCollisionObjectType(ECC_Destructible);
 	splineStartMeshReff->SetGenerateOverlapEvents(true);
 	splineStartMeshReff->RegisterComponent();
@@ -284,8 +287,7 @@ void APeelableSplineActor::OnConstruction(const FTransform& Transform)
 		USplineMeshComponent* splineMiddleMeshRef = NewObject<USplineMeshComponent>(this, splineMeshName);
 		splineMiddleMeshRef->SetMobility(EComponentMobility::Movable);
 		splineMiddleMeshRef->AttachToComponent(peelableSpline, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-		splineMiddleMeshRef->SetCollisionProfileName("BlockAll");
-		splineMiddleMeshRef->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+		splineMiddleMeshRef->SetCollisionProfileName("InteractableOverlap");
 		splineMiddleMeshRef->SetCollisionObjectType(ECC_Destructible);
 		splineMiddleMeshRef->SetGenerateOverlapEvents(true);
 		splineMiddleMeshRef->RegisterComponent();
@@ -304,8 +306,7 @@ void APeelableSplineActor::OnConstruction(const FTransform& Transform)
 	USplineMeshComponent* splineEndMeshReff = NewObject<USplineMeshComponent>(this, "SplineEnd");
 	splineEndMeshReff->SetMobility(EComponentMobility::Movable);
 	splineEndMeshReff->AttachToComponent(peelableSpline, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-	splineEndMeshReff->SetCollisionProfileName("BlockAll");
-	splineEndMeshReff->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	splineEndMeshReff->SetCollisionProfileName("InteractableOverlap");
 	splineEndMeshReff->SetCollisionObjectType(ECC_Destructible);
 	splineEndMeshReff->SetGenerateOverlapEvents(true);
 	splineEndMeshReff->RegisterComponent();

@@ -24,6 +24,7 @@ ARenderTargetInput::ARenderTargetInput()
 	currentBoard = nullptr;
 	traceDistance = 10.0f;
 	debugTrace = false;
+	traceEnabled = true;
 }
 
 void ARenderTargetInput::BeginPlay()
@@ -55,7 +56,7 @@ void ARenderTargetInput::Tick(float DeltaTime)
 void ARenderTargetInput::UpdateInput()
 {
 	// If grabbed.
-	if (handRefInfo.handRef)
+	if (handRefInfo.handRef && traceEnabled)
 	{
 		// Calculate current end location.
 		FVector endPoint = grabbableMesh->GetComponentLocation() + (grabbableMesh->GetUpVector() * -traceDistance);

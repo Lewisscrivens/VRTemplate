@@ -46,7 +46,7 @@ public:
 
 	/** Constrained sliding component. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)
-	UPrimitiveComponent* slidingMesh;
+	UStaticMeshComponent* slidingMesh;
 
 	/** Slidables audio component to play locking and dragging sounds.  */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly)

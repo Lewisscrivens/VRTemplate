@@ -438,7 +438,7 @@ void AVRHand::CheckForOverlappingActors()
 		for (UPrimitiveComponent* comp : overlapping)
 		{
 			// If a object with an interface has been found.
-			UObject* objectWithInterface = LookForInterface(comp);		
+			UObject* objectWithInterface = LookForInterface(comp);
 			if (objectWithInterface)
 			{
 				// Make sure this interface is currently allowing interaction.
@@ -452,7 +452,7 @@ void AVRHand::CheckForOverlappingActors()
 						objectToGrab = nullptr;
 					}
 					// Go to next item in the overlapping array.
-					continue; 
+					continue;
 				}
 
 				// Update the closest component and smallest distance value to compare to the next component in the array.
@@ -481,7 +481,7 @@ void AVRHand::CheckForOverlappingActors()
 		{
 			objectToGrab = toGrab;
 			IHandsInterface::Execute_Overlapping(objectToGrab, this);
-		}	
+		}
 	}
 }
 

@@ -31,27 +31,27 @@ class VRTEMPLATE_API USnappingRotatableComponent : public UBoxComponent
 public:
 
 	/** The location offset from this box components center location to snap the grabbable to. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotatable|Offset")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Snappable|Offset")
 	FVector locationOffset;
 
 	/** The rotation offset from this box components rotation to snap the grabbable to. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotatable|Offset")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Snappable|Offset")
 	FRotator rotationOffset;
 
 	/** The tag required on a grabbable actor to be snapped into this component. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotatable")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Snappable")
 	FName snappingTag;
 
 	/** The hand that just released the rotatable or grabbable actor. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotatable")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Snappable")
 	AVRHand* handRegrab; 
 
 	/** The intialised rotatable static mesh. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotatable")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Snappable")
 	URotatableStaticMesh* rotatableMesh; 
 
 	/** The current grabbable snapped to the snapping component. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotatable")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Snappable")
 	AGrabbableActor* snappedGrabbable; 
 
 	/** Lock at the rotatable's limit. */
@@ -59,8 +59,12 @@ public:
 	bool lockOnLimit;
 
 	/** The current rotational limit that the rotatable static mesh will move in. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotatable|Slidable")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Snappable|Twistable")
 	float rotatingLimit;
+
+	/** The distance between the component and the grabbing had before its removed from the lock. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Snappable|Twistable")
+	float returningDistance;
 
 	/** Sound to play when the rotatable mesh's limit is reached. If nullptr, no unlocking sound will be played. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Snappable|Twistable")
@@ -75,19 +79,24 @@ public:
 	////////////////////////////
 
 	/** Called when the twistable has been inserted and twisted to the correct limit. */
-	UPROPERTY(BlueprintAssignable, Category = "Rotatable")
-	FLimitReached limitReached;
+	UPROPERTY(BlueprintAssignable, Category = "Snappable")
+	FLimitReached limitReachedDel;
+
+	/** Called when the twistable has been inserted and twisted to the correct limit. */
+	UPROPERTY(BlueprintAssignable, Category = "Snappable")
+	FLimitReached limitExitedDel;
 
 	/** Called when something is snapped. */
-	UPROPERTY(BlueprintAssignable, Category = "Snapping")
+	UPROPERTY(BlueprintAssignable, Category = "Snappable")
 	FOnRotatingCompSnapped OnSnapConnect;
 
 	/** Called when something is unsnapped. */
-	UPROPERTY(BlueprintAssignable, Category = "Snapping")
+	UPROPERTY(BlueprintAssignable, Category = "Snappable")
 	FOnRotatingCompSnapped OnSnapDisconnect;
 
 private:
 
+	bool limitReached; /** Has the limit reached delegate been called already? */
 	FTransform originalGrabOffset; /** The original grab transform of the grabbable when snapped into place. */
 	FTimerHandle updateTimer; /** Timer to check the state of the hand relative to this rotatable interactable. */
 	

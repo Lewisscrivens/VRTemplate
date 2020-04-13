@@ -23,6 +23,8 @@ class AVRHand;
 class UHapticFeedbackEffect_Base;
 class USoundBase;
 class UMaterialInterface;
+class UPhysicsConstraintComponent;
+class UCapsuleComponent;
 
 /** Enum to differ between different regeneration types for the spline. */
 UENUM(BlueprintType)
@@ -97,6 +99,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Peelable|Spline Defaults")
 		float splineMeshDistance;
 
+	/** If the spline mesh is in physics mode what angular limits should be generated for the constraints between each spline mesh. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Peelable|Spline Defaults")
+		float defaultAngularLimit;
+
 	/** The number of spline points to generate by default. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Peelable|Spline Defaults")
 		int tapeSections;
@@ -163,7 +169,7 @@ protected:
 	 * NOTE: If index is a valid index within the splineMeshes array this function will only update that single index. */
 	void RefreshSplineMeshesFromSpline(int index = -1);
 
-public:	
+public:
 
 	/** Constructor. */
 	APeelableSplineActor();

@@ -74,6 +74,7 @@ void USnappingSlidableComponent::UpdateSlidableState()
 			// Disconnect and Set world location of overlapping grabbable then grab it.
 			snappedGrabbable->grabbableMesh->SetWorldLocationAndRotation(grabbedLocation, grabbedRotation, false, nullptr, ETeleportType::TeleportPhysics);
 			handRegrab->ForceGrab(grabbable);
+			snappedGrabbable->grabbableMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 			// Snapped grabbable is now disconnected.
 			snappedGrabbable = nullptr;

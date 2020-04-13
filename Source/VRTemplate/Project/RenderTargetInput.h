@@ -45,6 +45,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input", meta = (UIMin = "0.0", ClampMin = "0.0"))
 	float traceDistance;
 
+	/** This class is enabled? Needed for example in the marker the lid can be put on which would make this class functionality pointless. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	bool traceEnabled;
+
 	/** Should show class debug information like the trace while grabbed. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	bool debugTrace;

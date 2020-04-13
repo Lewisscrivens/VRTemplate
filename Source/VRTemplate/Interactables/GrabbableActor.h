@@ -255,6 +255,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Grabbable")
 	UHapticFeedbackEffect_Base* collisionFeedback;
 
+	/** Stored snapping actor so it can be ignored if overlapping to snapping actors at once. */
+	UPROPERTY(BlueprintReadOnly, Category = "Grabbable")
+	class ASnappingActor* hasSnappingActor;
+
 	//////////////////////////
 	//	  Grab delegates    //
 	//////////////////////////
