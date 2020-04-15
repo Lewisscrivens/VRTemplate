@@ -191,10 +191,7 @@ private:
 	float currentHapticIntesity; /** The current playing haptic effects intensity for this hand classes controller. */
 	bool collisionEnabled; /** Collision is enabled or disabled for this hand, disabled on begin play until the controller is tracked. */
 	bool lastFrameOverlap; /** Did we overlap something in the last frame. */
-
-#if WITH_EDITOR
 	bool devModeEnabled; /** Local bool to check if dev mode is enabled. */
-#endif
 
 private:
 
