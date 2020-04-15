@@ -110,14 +110,6 @@ void ARotatableActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// If rotatable component was not found return and destroy this class.
-	if (rotator->GetNumChildrenComponents() == 0)
-	{
-		UE_LOG(LogRotatable, Warning, TEXT("The Rotatable Actor %s, cannot find a child staticMesh for grabbing, component has been destroyed..."), *GetName());
-		Destroy();
-		return;
-	}
-
 	// Save original relative rotation of the rotator.
 	meshOriginalRelative = rotator->RelativeRotation;
 	
@@ -331,7 +323,7 @@ void ARotatableActor::UpdateConstraintRefference(float constraintAngle)
 void ARotatableActor::UpdateGrabbedRotation()
 {
 	// Get the correct world offset depending on current rotate mode.
-	FVector handOffset;
+	FVector handOffset = FVector::ZeroVector;
 	if (rotateMode == ERotateMode::TwistRotation) handOffset = grabLocation->GetComponentLocation();
 	else handOffset = handRef->grabCollider->GetComponentLocation();
 
@@ -341,7 +333,8 @@ void ARotatableActor::UpdateGrabbedRotation()
 	float originalAngleOfHand = UVRFunctionLibrary::GetYawAngle(handStartLocation);
 
 	// Get the delta rotator normalized of the two angles to get the rotation between the two.
-	FRotator rotationOffset = (FRotator(0.0f, currentAngleOfHand, 0.0f) - FRotator(0.0f, originalAngleOfHand, 0.0f)).GetNormalized();
+	FRotator rotationOffset = FRotator(0.0f, currentAngleOfHand - originalAngleOfHand, 0.0f).GetNormalized();
+	
 	// Get the local rotation from the meshes starting world position as the component disables/re-enables physics so relative rotations are broken/disconnected.
 	FRotator originalLocalRotation = UVRFunctionLibrary::GetRelativeRotationFromWorld(meshStartRotation, pivot->GetComponentTransform());	
 	FRotator finalRotation = originalLocalRotation + rotationOffset;
@@ -356,18 +349,6 @@ void ARotatableActor::UpdateGrabbedRotation()
 
 void ARotatableActor::UpdateHandGrabDistance()
 {
-// 	// Release from hand if the actualCumulativeAngle becomes too much greater than the cumulative angle.
-// 	if (releaseOnOverRotation && limitedToRange && FMath::Abs(actualCumulativeAngle - cumulativeAngle) >= overRotationLimit)
-// 	{
-// 		handRef->ReleaseGrabbedActor();
-// 		if (debug) UE_LOG(LogRotatable, Log, TEXT("The rotatable grabbed has released due to over rotation limit being exceeded at rotation %s."), *FString::SanitizeFloat(actualCumulativeAngle));
-// 	}
-// 	
-// 	else
-// 	{
-// 		
-// 	}
-
 	// Check the distance from the hand grabbed position to the current hand position.
 	if (rotateMode == ERotateMode::TwistRotation)
 	{
@@ -416,7 +397,7 @@ void ARotatableActor::UpdateRotatable(float DeltaTime)
 	else currentYawAngle = UVRFunctionLibrary::GetRelativeRotationFromWorld(rotator->GetComponentRotation(), pivot->GetComponentTransform()).Yaw;
 
 	// Get the current angle change to add/remove from the currentCumulativeAngle.
-	float currentAngleChange;
+	float currentAngleChange = 0.0f;
 	if (!firstRun) currentAngleChange = currentYawAngle - lastYawAngle;
 	else firstRun = false;
 	lastYawAngle = currentYawAngle; 
@@ -623,10 +604,12 @@ void ARotatableActor::SetRotatableRotation(float newRotation, bool useTimeine, b
 {
 	if (flipped ? newRotation >= rotationLimit && newRotation < 0.0f : newRotation >= 0.0f && newRotation <= rotationLimit)
 	{
-		// If in hand release.
-		if (handRef) handRef->ReleaseGrabbedActor();
+		// Nullify the hand.
+		handRef = nullptr;
+
 		// If locked unlock.
 		if (locked) Unlock();
+
 		// Disable physics while returning.
 		if (rotator->IsSimulatingPhysics()) rotator->SetSimulatePhysics(false);
 
@@ -634,7 +617,7 @@ void ARotatableActor::SetRotatableRotation(float newRotation, bool useTimeine, b
 		lockOnSetRotation = lockAtNewRotation;
 		if (useTimeine && returnTimeline)
 		{
-			// Return to the new rotation using the timeline and the return curve.
+			// Return to the new rotation using the time-line and the return curve.
 			isReturning = true;
 			firstRun = true;
 			returningRotation = newRotation;
@@ -643,7 +626,7 @@ void ARotatableActor::SetRotatableRotation(float newRotation, bool useTimeine, b
 			// Don't allow hand to interact if locked after return.
 			if (lockOnSetRotation && !grabWhileLocked) interactableSettings.canInteract = false;
 
-			// Start timeline.
+			// Start time-line.
 			returnTimeline->PlayFromStart();
 		}
 		else
@@ -805,7 +788,7 @@ void ARotatableActor::GrabPressed_Implementation(AVRHand* hand)
 void ARotatableActor::GrabReleased_Implementation(AVRHand* hand)
 {
 	// Run the grab released delegate.
-	OnMeshReleased.Broadcast(handRef);
+	OnMeshReleased.Broadcast(hand);
 
 	// Reset this rotatable back to its default state.
 	switch (rotateMode)
@@ -817,13 +800,13 @@ void ARotatableActor::GrabReleased_Implementation(AVRHand* hand)
 		if (simulatePhysics)
 		{
 			rotator->SetSimulatePhysics(true);
-			rotator->SetPhysicsLinearVelocity(handRef->handVelocity, false);
-			rotator->SetAllPhysicsAngularVelocityInDegrees(handRef->handAngularVelocity, false);
+			rotator->SetPhysicsLinearVelocity(hand->handVelocity, false);
+			rotator->SetAllPhysicsAngularVelocityInDegrees(hand->handAngularVelocity, false);
 		}
 	break;
 	case ERotateMode::PhysicsRotation:
 		// Release this rotatable from the hands physics handle.
-		handRef->grabHandle->DestroyJoint();
+		hand->grabHandle->DestroyJoint();
 	break;
 	}
 

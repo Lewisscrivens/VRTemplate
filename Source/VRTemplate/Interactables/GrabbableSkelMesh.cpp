@@ -27,7 +27,8 @@ DEFINE_LOG_CATEGORY(LogGrabbableSkelComp);
 UGrabbableSkelMesh::UGrabbableSkelMesh()
 {
 	// Setup grabbable collision properties.
-	SetCollisionProfileName(FName("Grabbable"));
+	SetCollisionProfileName("Interactable");
+	ComponentTags.Add("Grabbable");
 	SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	SetUseCCD(true);
 	bMultiBodyOverlap = true;

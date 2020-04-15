@@ -52,7 +52,7 @@ AVRHand::AVRHand()
 	// Skeletal mesh component for the hand model. Default setup.
 	handSkel = CreateDefaultSubobject<USkeletalMeshComponent>("handSkel");
 	handSkel->SetCollisionProfileName("Hand");
-	handSkel->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	handSkel->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	handSkel->SetupAttachment(handRoot);
 	handSkel->SetRenderCustomDepth(true);
 	handSkel->SetGenerateOverlapEvents(true);
@@ -62,7 +62,7 @@ AVRHand::AVRHand()
 	// Collider to handle physics constrained components. Default setup.
 	physicsCollider = CreateDefaultSubobject<UBoxComponent>("PhysicsCollider");
 	physicsCollider->SetupAttachment(handRoot);
-	physicsCollider->SetCollisionProfileName("PhysicsActor");
+	physicsCollider->SetCollisionProfileName("PhysicsActorOn");
 	physicsCollider->SetRelativeTransform(FTransform(FRotator(-24.0f, 0.0f, 0.0f), FVector(-8.0f, 0.4f, 4.5f), FVector(1.0f, 1.0f, 1.0f)));
 	physicsCollider->SetBoxExtent(FVector(9.0f, 2.2f, 4.5f)); 
 	physicsCollider->SetSimulatePhysics(true); 
@@ -232,12 +232,6 @@ void AVRHand::Tick(float DeltaTime)
 
 		// Update interactable distance for releasing over max distance.
 		CheckInteractablesDistance();
-
-		// Deactivate collision in-case.
-		if (handSkel->GetCollisionEnabled() != ECollisionEnabled::NoCollision || physicsCollider->GetCollisionProfileName() != "PhysicsColliderOff")
-		{
-			ActivateCollision(false);
-		}
 	}
 	// Otherwise look for objects to grab...
 	else if (!gripping) CheckForOverlappingActors();
@@ -400,6 +394,15 @@ void AVRHand::TeleportHand()
 
 void AVRHand::UpdateControllerTrackedState()
 {
+	// If dev mode is enabled.
+#if WITH_EDITOR
+	if (devModeEnabled)
+	{
+		foundController = true;
+		return;
+	}
+#endif
+
 	// Only allow the collision on this hand to be enabled if the controller is being tracked.
 	bool trackingController = controller->IsTracked();
 	if (trackingController)
@@ -604,7 +607,7 @@ void AVRHand::ActivateCollision(bool open, float openDelay)
 			handSkel->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 			FTimerDelegate timerDel;
 			timerDel.BindUFunction(this, FName("CollisionDelay"));
-			GetWorld()->GetTimerManager().SetTimer(colTimerHandle, timerDel, 0.01f, true, openDelay);
+			GetWorldTimerManager().SetTimer(colTimerHandle, timerDel, 0.1f, true, openDelay);
 			collisionEnabled = true;
 		}
 		else// Disable collision while the hand is closed to prevent accidental interactions.
@@ -613,7 +616,7 @@ void AVRHand::ActivateCollision(bool open, float openDelay)
 			physicsCollider->SetCollisionProfileName("PhysicsActorOff");
 			physicsCollider->SetNotifyRigidBodyCollision(false);
 			collisionEnabled = false;
-			GetWorld()->GetTimerManager().ClearTimer(colTimerHandle);
+			GetWorldTimerManager().ClearTimer(colTimerHandle);
 		}
 
 #if WITH_EDITOR
@@ -633,12 +636,12 @@ void AVRHand::CollisionDelay()
 	if (!overlapping)
 	{
 		// Also ensure physics collider is no longer overlapping.
-		bool physicsOverlapping = UVRFunctionLibrary::ComponentOverlapComponentsByChannel(physicsCollider, physicsCollider->GetComponentTransform(), ECC_Pawn, player->actorsToIgnore, overlappingComps, true);
+		bool physicsOverlapping = UVRFunctionLibrary::ComponentOverlapComponentsByChannel(physicsCollider, physicsCollider->GetComponentTransform(), ECC_PhysicsBody, player->actorsToIgnore, overlappingComps, true);
 		if (!physicsOverlapping)
 		{
 			// Re-enable collision in this classes colliding components.
 			handSkel->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-			physicsCollider->SetCollisionProfileName("PhysicsActorOff");
+			physicsCollider->SetCollisionProfileName("PhysicsActorOn");
 			physicsCollider->SetNotifyRigidBodyCollision(true);
 
 			// End this function loop.
@@ -761,7 +764,7 @@ void AVRHand::Disable(bool disable)
 	if (toggle)
 	{
 		handSkel->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		physicsCollider->SetCollisionProfileName("PhysicsActor");
+		physicsCollider->SetCollisionProfileName("PhysicsActorOn");
 		grabCollider->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
 	else

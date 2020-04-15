@@ -120,8 +120,8 @@ void ASnappingActor::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AAct
 		case ESnappingMode::Instant:
 		{
 			interpMode = EInterpMode::Disabled;
-			FVector targetLocation = snapBox->GetComponentLocation() + locationOffset;
-			FRotator targetRotation = snapBox->GetComponentRotation() + rotationOffset;
+			FVector targetLocation = snapBox->GetComponentTransform().TransformPositionNoScale(locationOffset);
+			FRotator targetRotation = snapBox->GetComponentTransform().TransformRotation(rotationOffset.Quaternion()).Rotator();
 			overlappingGrabbable->grabbableMesh->SetVisibility(false, true);
 			previewComponent->SetWorldLocationAndRotation(targetLocation, targetRotation);
 			if (!overlappingGrabbable->OnMeshGrabbed.Contains(this, "OnGrabbablePressed")) overlappingGrabbable->OnMeshGrabbed.AddDynamic(this, &ASnappingActor::OnGrabbablePressed);
@@ -138,8 +138,8 @@ void ASnappingActor::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AAct
 		case ESnappingMode::InterpolateOnRelease:
 		{
 			// Interpolate to the center of the snapBox + the location and rotation offset.
-			FVector targetLocation = snapBox->GetComponentLocation() + locationOffset;
-			FRotator targetRotation = snapBox->GetComponentRotation() + rotationOffset;
+			FVector targetLocation = snapBox->GetComponentTransform().TransformPositionNoScale(locationOffset);
+			FRotator targetRotation = snapBox->GetComponentTransform().TransformRotation(rotationOffset.Quaternion()).Rotator();
 			if (!overlappingGrabbable->OnMeshGrabbed.Contains(this, "OnGrabbablePressed")) overlappingGrabbable->OnMeshGrabbed.AddDynamic(this, &ASnappingActor::OnGrabbablePressed);
 			previewComponent->SetWorldLocationAndRotation(targetLocation, targetRotation);
 		}
@@ -199,8 +199,8 @@ void ASnappingActor::OnGrabbablePressed(AVRHand* hand, UPrimitiveComponent* comp
 	if (snap)
 	{
 		previewComponent->AttachToComponent(snapBox, FAttachmentTransformRules::KeepWorldTransform);
-		FVector targetLocation = snapBox->GetComponentLocation() + locationOffset;
-		FRotator targetRotation = snapBox->GetComponentRotation() + rotationOffset;
+		FVector targetLocation = snapBox->GetComponentTransform().TransformPositionNoScale(locationOffset);
+		FRotator targetRotation = snapBox->GetComponentTransform().TransformRotation(rotationOffset.Quaternion()).Rotator();
 		previewComponent->SetWorldLocationAndRotation(targetLocation, targetRotation);
 	}
 
@@ -228,8 +228,8 @@ void ASnappingActor::OnGrabbableRealeased(AVRHand* hand, UPrimitiveComponent* co
 	ResetPreviewMesh();
 
 	// Get snapping location/rotation.
-	FVector targetLocation = snapBox->GetComponentLocation() + locationOffset;
-	FRotator targetRotation = snapBox->GetComponentRotation() + rotationOffset;
+	FVector targetLocation = snapBox->GetComponentTransform().TransformPositionNoScale(locationOffset);
+	FRotator targetRotation = snapBox->GetComponentTransform().TransformRotation(rotationOffset.Quaternion()).Rotator();
 
 	// Perform releasing snapping functionality on the current released component.
 	if (compReleased)
@@ -251,8 +251,6 @@ void ASnappingActor::OnGrabbableRealeased(AVRHand* hand, UPrimitiveComponent* co
 		{
 			// Disable any physics on grabbable skel.
 			compReleased->SetSimulatePhysics(false);
-			FVector targetLocation = snapBox->GetComponentLocation() + locationOffset;
-			FRotator targetRotation = snapBox->GetComponentRotation() + rotationOffset;
 			compReleased->SetWorldLocationAndRotation(targetLocation, targetRotation);
 			compReleased->AttachToComponent(snapBox, FAttachmentTransformRules::KeepWorldTransform);
 		}

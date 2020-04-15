@@ -55,7 +55,7 @@ AVRPawn::AVRPawn()
 	camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	camera->SetupAttachment(scene);
 	headCollider = CreateDefaultSubobject<USphereComponent>(TEXT("HeadCollider"));
-	headCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	headCollider->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	headCollider->SetCollisionProfileName("Hand");
 	headCollider->InitSphereRadius(20.0f);
 	headCollider->SetupAttachment(camera);
@@ -162,9 +162,6 @@ void AVRPawn::BeginPlay()
 	actorsToIgnore.Add(this);
 	actorsToIgnore.Add(leftHand);
 	actorsToIgnore.Add(rightHand);
-
-	// Enable collisions individually when they are no longer overlapping any physics objects.
-	if (!collisionEnabled) ActivateAllCollision(true);
 
 	// Set the tracking origin for the HMD to be the floor. To support PSVR check if its that headset and set tracking origin to eye level and add the default player height. Also add way to rotate.
 	UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(EHMDTrackingOrigin::Floor);

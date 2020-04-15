@@ -12,7 +12,7 @@ USlidableStaticMesh::USlidableStaticMesh()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	// Initialise this component.
-	SetCollisionProfileName("Grabbable");
+	SetCollisionProfileName("Interactable");
 	ComponentTags.Add("Grabbable");
 
 	// Initialise variables for this class.

@@ -50,8 +50,8 @@ enum class EConstraintState : uint8
 };
 
 /** Mixture between physics constraint and static rotation to allow angles greater than 180 degrees.
- * NOTE: Pivot in place needs to have collision enabled with everything ignored for it to work correctly when created physics bodies for this constrained rotatable.
- * NOTE: Grabbable rotating component must be a child of the rotatable box component and have a "Grabbable" tag.
+ * NOTE: Pivot in place needs to have collision enabled with everything ignored for it to work correctly when created physics bodies for this constrained rotatable. This is why there is a rotatable box that should have child static meshes added...
+ * NOTE: Grabbable rotating component must be a child of the rotatable box component and have a "Grabbable" tag on any components you can grab this rotatable from.
  * NOTE: This class is best suited to things that need a rotation limit above 180 degrees and need physical collisions like a door etc. */
 UCLASS()
 class VRTEMPLATE_API ARotatableActor: public AActor, public IHandsInterface

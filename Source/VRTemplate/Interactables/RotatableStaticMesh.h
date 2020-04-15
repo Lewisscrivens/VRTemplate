@@ -75,10 +75,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotatable", meta = (ClampMin = "0.0", UIMin = "0.0", ClampMax = "0.2", UIMax = "0.2"))
 		float friction;
 
-	/** The amount of rotation to add to the rotation at a time. NOTE: If 0 this is not used. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotatable", meta = (ClampMin = "0.0", UIMin = "0.0"))
-		float grabRotationStep;
-
 	/** The max rotation limit. NOTE: 0 means its free to rotate to any given limit. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rotatable")
 		float rotationLimit;

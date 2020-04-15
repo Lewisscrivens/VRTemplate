@@ -15,6 +15,10 @@ URotatableStaticMesh::URotatableStaticMesh()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 
+	// Set collision profile (IMPORTANT)
+	SetCollisionProfileName("Interactable");
+	ComponentTags.Add("Grabbable");
+
 	// Initialise variables.
 	handRef = nullptr;
 	grabScene = nullptr;
@@ -32,7 +36,6 @@ URotatableStaticMesh::URotatableStaticMesh()
 	cumulativeAngle = 0.0f;
 	lastYawAngle = 0.0f;
 	maxOverRotation = 50.0f;
-	grabRotationStep = 0.0f;
 	firstRun = true;
 	releaseOnOverRotation = true;
 	lockHapticEffect = nullptr;
