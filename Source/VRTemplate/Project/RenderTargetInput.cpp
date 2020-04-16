@@ -86,6 +86,9 @@ void ARenderTargetInput::UpdateInput()
 				}
 			}
 
+			// Rumble the hand while drawing on the board.
+			if (handRefInfo.handRef) handRefInfo.handRef->PlayFeedback(nullptr, 1.0f, true);
+
 			// Save information for next check.
 			lastUVLocation = UVLoc;
 			lastTraceLocation = endPoint;
