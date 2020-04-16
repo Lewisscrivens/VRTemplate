@@ -112,7 +112,8 @@ public:
 
 /** Make a actor grabbable using this class. NOTE: components will have to use the mesh as the root component to be able to be part
  * of the grabbable actor... 
- * TODO: Improve target rotation mode for two handed grab modes. */
+ * TODO: Improve target rotation mode for two handed grab modes.
+ * NOTE: IMPORTANT to make sure that physics material override is left to empty, if this is needed use the physics material in the material of the grabbable mesh!!! */
 UCLASS()
 class VRTEMPLATE_API AGrabbableActor : public AActor, public IHandsInterface
 {
