@@ -32,4 +32,6 @@ Demo Room:
 
 Build link: https://drive.google.com/file/d/1dMQHIPqtKw6h97qrubUI5sbPtXTrx9fg/view?usp=sharing
 
-![logo](Images/DemoRoomScreenshot.png)
+NOTE: Click the image bellow to find a video of me describing each part of the demo room.
+
+[![logo](Images/DemoRoomScreenshot.png)](https://youtu.be/iYSJ8SFLW2Q)
