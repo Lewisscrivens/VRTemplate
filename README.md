@@ -24,6 +24,8 @@ Please visit the documentation I have extracted using doxywizard at the followin
 
 http://lewisscrivens.github.io/VRTemplateDoc
 
+NOTE: The template was developed using a HTC Vive but this build was tested using a Valve index, also supports the oculus.
+
 ----------------------------------------------------------------------------------
 
 Demo Room:
